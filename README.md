@@ -3,4 +3,4 @@ Pipelines written in Nextflow and Python to facilitate comparative genomics anal
 
 ## bcfConsensusFromPairedFastq.nf
 
-"nextflow run bcfConsensusFromPairedFastq.nf"
+```nextflow run bcfConsensusFromPairedFastq.nf```

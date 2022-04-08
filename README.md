@@ -6,14 +6,15 @@ A Nextflow pipeline for mapping an arbitrary number of paired-end files to a vir
 
 ```nextflow run bcfConsensusFromPairedFastq.nf```
 
-<u>Prerequisites:</u> smalt, samtools, and bcftools
-Required input folders: paired_files/ and Calicivirus_references/
-Expected output folders: mapOut/ and multi_consensus/
+**Prerequisites:** smalt, samtools, and bcftools
+*Required input folders* are paired_files/ and Calicivirus_references/
+*Expected output folders* are mapOut/ and multi_consensus/
 
 ### bowtieConsensusFromPairedFastq.nf
 Maps an arbitrary number of paired-end files to a viral reference genome to produce consensus sequences in fasta format and genome coverage files in .bed format
 
 ```nextflow run bowtieConsensusFromPairedFastq.nf```
 
-Required input folders: paired_files/ and Calicivirus_references/
-Expected output folders: bowtieOut/ and new_multi_consensus/
+**Prerequisites:** bowtie2, samtools, bedtools, and bcftools
+*Required input folders* are paired_files/ and Calicivirus_references/
+*Expected output folders* are bowtieOut/ and new_multi_consensus/

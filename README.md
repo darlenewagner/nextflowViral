@@ -6,7 +6,7 @@ A Nextflow pipeline for mapping an arbitrary number of paired-end files to a vir
 
 ```nextflow run bcfConsensusFromPairedFastq.nf```
 
-Prerequisites: smalt, samtools, and bcftools
+<u>Prerequisites:</u> smalt, samtools, and bcftools
 Required input folders: paired_files/ and Calicivirus_references/
 Expected output folders: mapOut/ and multi_consensus/
 
@@ -15,6 +15,5 @@ Maps an arbitrary number of paired-end files to a viral reference genome to prod
 
 ```nextflow run bowtieConsensusFromPairedFastq.nf```
 
-Prerequisites: bowtie2, samtools, bedtools, and bcftools
 Required input folders: paired_files/ and Calicivirus_references/
 Expected output folders: bowtieOut/ and new_multi_consensus/

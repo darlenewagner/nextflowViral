@@ -14,6 +14,7 @@ Expected output folders: mapOut/ and multi_consensus/
 Maps an arbitrary number of paired-end files to a viral reference genome to produce consensus sequences in fasta format and genome coverage files in .bed format
 
 ```nextflow run bowtieConsensusFromPairedFastq.nf```
+
 Prerequisites: bowtie2, samtools, bedtools, and bcftools
 Required input folders: paired_files/ and Calicivirus_references/
 Expected output folders: bowtieOut/ and new_multi_consensus/

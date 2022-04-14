@@ -17,5 +17,5 @@ Maps an arbitrary number of paired-end files to a viral reference genome to prod
 
 **Prerequisites:** bowtie2, samtools, bedtools, and bcftools<br>
 *Required input folders* are paired_files/ and ref_180330_Calici36_SureSelectNoro_Capture/<br>
-***ref_180330_Calici36_SureSelectNoro_Capture*** contains .fasta, .sizes, and bowtie2-build .bt2 files
+***ref_180330_Calici36_SureSelectNoro_Capture/*** contains .fasta, .sizes, and bowtie2-build .bt2 files<br>
 *Expected output folders* are bowtieOut/ and new_multi_consensus/

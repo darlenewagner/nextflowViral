@@ -1,16 +1,19 @@
 #! /apps/x86_64/nextflow/21.04.3 nextflow
 
-// This pipeline takes a SMALT-indexed reference and an arbitrary number of paired-end
-// .fastq files to create a vcf file of SNPs. Indels and complex polymorphisms are excluded 
-// from the .vcf requirements: nextflow, smalt, samtools, and freebayes
+// This pipeline takes a Bowtie2-indexed reference and an arbitrary number of paired-end
+// .fastq files to create reference-based assembly .fasta files in params.consensdir
+// Sorted bam pileups and VCF files are also created and stored in params.intermdir
+// For reference-based assemblies, bases with less than 1X or 25X coverage are masked with 'N'
+// Indels and complex polymorphisms are excluded from the VCF files
+// Prerequisites: nextflow, bowtie2, samtools, freebayes, and genomeCoverageBed
 
 Channel
-  .fromFilePairs('paired_files/*_R{1,2}*.fastq')
+  .fromFilePairs(params.querydir)
   .set { samples_ch }
   
 process mapSAM {
 
-  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/bowtieOut/", mode: 'copy'  
+  publishDir "$params.intermdir", mode: 'copy'  
   
   input:
   tuple val(sampleId), path(reads) from samples_ch
@@ -42,7 +45,7 @@ process sam2bam {
 
 process sortBam {
   
-  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/bowtieOut/", mode: 'copy'  
+  publishDir "$params.intermdir", mode: 'copy'  
 
   input:
   tuple sampleId, path("${sampleId}.bam") from bamOut
@@ -59,7 +62,6 @@ process sortBam {
 }
 
 process makeGenomeCov {
-//  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/new_multi_consensus/", mode: 'copy'
   
   input:
   tuple sampleId, path("${sampleId}.sorted.bam") from sortedOut0
@@ -70,13 +72,13 @@ process makeGenomeCov {
 
   script:
   """
-  genomeCoverageBed -ibam "${sampleId}".sorted.bam -d -g $params.sizes > "${sampleId}".bedGraph
+  genomeCoverageBed -ibam "${sampleId}".sorted.bam -d -g "${params.reference}".sizes > "${sampleId}".bedGraph
   """
 }
 
 process indexBam {
   
-  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/bowtieOut/", mode: 'copy'  
+  publishDir "$params.intermdir", mode: 'copy'  
 
   input:
   tuple sampleId, path("${sampleId}.sorted.bam") from sortedOut
@@ -92,7 +94,7 @@ process indexBam {
 
 process makeVCF {
 
-  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/mapOut/", mode: 'copy'
+  publishDir "$params.intermdir", mode: 'copy'
     
   input:
   tuple sampleId, path("${sampleId}.sorted.bam") from sortedOut2
@@ -102,12 +104,13 @@ process makeVCF {
   
   script:
   """
-  freebayes --min-coverage 5 --no-indels --no-mnps --no-complex -f $params.rawReference "${sampleId}".sorted.bam >"${sampleId}".vcf  
+  freebayes --min-coverage 5 --no-indels --no-mnps --no-complex -f "${params.reference}".fasta "${sampleId}".sorted.bam >"${sampleId}".vcf  
   """
 }
 
 process prepVCF {
-  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/mapOut/", mode: 'copy'
+
+  publishDir "$params.intermdir", mode: 'copy'
   
   input:
   tuple sampleId, path("${sampleId}.vcf") from bVCF
@@ -124,7 +127,6 @@ process prepVCF {
 }
 
 process makeBcfConsensus {
-//  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/new_multi_consensus/", mode: 'copy'
   
   input:
   tuple sampleId, path("${sampleId}.vcf.gz") from bgzVCF
@@ -136,12 +138,11 @@ process makeBcfConsensus {
   
   script:
   """
-  cat $params.rawReference | bcftools consensus "${sampleId}".vcf.gz > "${sampleId}".fasta
+  cat "${params.reference}".fasta | bcftools consensus "${sampleId}".vcf.gz > "${sampleId}".fasta
   """
 }
 
 process makeCoverageMask {
-//  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/new_multi_consensus/", mode: 'copy'
 
   input:
   tuple sampleId, path("${sampleId}.bedGraph") from bedOut
@@ -170,7 +171,6 @@ process makeCoverageMask2 {
 }
 
 process maskWithNs {
-//  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/new_multi_consensus/", mode: 'copy'
 
   input:
   tuple sampleId, path("${sampleId}.bedGraph.Zero.nnn") from zeroNNN
@@ -202,7 +202,8 @@ process maskWithNs2 {
 
 
 process renameHeader {
-  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/new_multi_consensus/", mode: 'copy'
+
+  publishDir "$params.consensdir", mode: 'copy'
   
   input:
   tuple sampleId, path("${sampleId}.atLeast1X.fa") from atLeast1X
@@ -219,7 +220,8 @@ process renameHeader {
 
 
 process renameHeader2 {
-  publishDir "/scicomp/home-pure/ydn3/nextflow_for_read_mapping/new_multi_consensus/", mode: 'copy'
+
+  publishDir "$params.consensdir", mode: 'copy'
   
   input:
   tuple sampleId, path("${sampleId}.atLeast25X.fa") from atLeast25X  

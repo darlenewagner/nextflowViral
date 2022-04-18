@@ -1,5 +1,5 @@
 # nextflowViral
-All pipelines are written in Nextflow and/or Python to facilitate comparative genomics analysis for viruses.  All these pipelines require Nextflow 21.04.3 and above and most of the pipelines require Python 3.9.1 and above.
+The pipeline, bowtieConsensusFromPairedFastq.nf, generates consensus genomes from paired fastq files mapped to reference at minimum 1X and 25X coverage.  To run, it requires Nextflow 21.04.3 and above and for setup, it requires Python 3.9.1 and above.
 
 ### bcfConsensusFromPairedFastq.nf
 A Nextflow pipeline for mapping an arbitrary number of paired-end files to a viral reference genome to produce consensus sequences in fasta format

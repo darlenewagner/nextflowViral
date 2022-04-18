@@ -1,16 +1,16 @@
 # nextflowViral
-The pipeline, *bowtieConsensusFromPairedFastq.nf*, generates consensus genomes from paired fastq files mapped to reference at minimum 1X and 25X coverage.  To run, it requires Nextflow 21.04.3 and above and for setup, it requires Python 3.9.1 and above.
+The pipeline, ***bowtieConsensusFromPairedFastq.nf***, generates consensus genomes from paired fastq files mapped to reference at minimum 1X and 25X coverage.  To run, it requires Nextflow 21.04.3 and above and for setup, it requires Python 3.9.1 and above.
 
 ### Running bowtieConsensusFromPairedFastq.nf
-To run using input parameters in *nextflow.config*, simply type the following after installation:
+To run using input parameters in ***nextflow.config***, simply type the following after installation:
 
 ```nextflow run bowtieConsensusFromPairedFastq.nf```
 
-To run using custom parameters for *--querydir* and *--reference*, for example, the folder, my_paired_fastq/, and the reference basename, my_reference/my_genome, type:
+To run using custom parameters for *--querydir* and *--reference*, for example, the folder, *my_paired_fastq/*, and the reference basename, *my_reference/my_genome*, type:
 
 ```nextflow run bowtieConsensusFromPairedFastq.nf --querydir "$PWD/my_paired_fastq/*_R{1,2}*.fastq" --reference $PWD/my_reference/my_genome```
 
-Alternatively, to avoid typing complicated filepaths at the command line, simply edit the *querydir*, *reference*, *intermdir*, and/or *consensdir* in the *nextflow.config* file.
+Alternatively, to avoid typing complicated filepaths at the command line, simply edit the *querydir*, *reference*, *intermdir*, and/or *consensdir* in the ***nextflow.config*** file.
 
 **Prerequisites:** bowtie2, samtools, bedtools, and bcftools<br>
 *Required input folders* are paired_files/ and ref_180330_Calici36_SureSelectNoro_Capture/<br>

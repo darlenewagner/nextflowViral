@@ -18,3 +18,7 @@ Alternatively, to avoid typing complicated filepaths at the command line, simply
 *Expected output folders* are bowtieOut/ and new_multi_consensus/
 
 ### Installation and setup for bowtieConsensusFromPairedFastq.nf ###
+To set up run environment with required input and output folders and appropriately-formatted files within input folders, enter the command:<br>
+```python setupFolders.py --input newTest.tar```
+<br>
+Here, *--input newTest.tar* is optional.  The default input is 

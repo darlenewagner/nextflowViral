@@ -75,7 +75,7 @@ response = os.popen("which bowtie2").read()
 myPath = os.path.split(response)
 
 haltingVariable = False
-packages = { 'bowtie2' : False, 'samtools' : False, 'genomeCoverageBed' : False, 'freebayes' : False }
+packages = { 'bowtie2' : False, 'samtools' : False, 'genomeCoverageBed' : False, 'freebayes' : False, 'nextflow' : False }
 
 ## The next four blocks check for presence of prerequsite packages ##
 
@@ -118,6 +118,16 @@ if not os.path.isfile(myPath):
 else:
         logger.info("Found freebayes in {}".format(response))
         packages['freebayes'] = True
+
+## Check nextflow
+response = os.popen("which nextflow").read()
+myPath = response.strip()
+if not os.path.isfile(myPath):
+        logger.warning("Package nextflow not installed and/or not found in $PATH!!!")
+        haltingVariable = True
+else:
+        logger.info("Found nextflow in {}".format(response))
+        packages['nextflow'] = True
 
 ## Terminate setup if one or more prerequistes are missing ##
 if(haltingVariable == True):

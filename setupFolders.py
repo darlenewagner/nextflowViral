@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import sys, os, os.path, argparse, re, string, logging, warnings
+import sys, os, os.path, argparse, re, string, logging, warnings, time
+import pathlib
 
 ## one input parameter expected, default is 
 
@@ -33,8 +34,8 @@ print(args.input.name)
 extracted = re.sub(r'\.tar', '', args.input.name)
 
 ## declare input and output folders expected by bowtieConsensusFromPairedFastq.nf
-fastqFolder = 'Noro_paired_files'
-referenceFolder = 'reference_Noro_paired_files'
+fastqFolder = 'D70_paired_files'
+referenceFolder = 'D70_reference_genome'
 intermFolder = 'bowtieConsensInterm'
 outputFolder = 'bowtieConsensOutput'
 
@@ -58,10 +59,6 @@ for f in files:
                 os.system('gunzip -c {}/{} > {}/{}'.format(fastqFolder, f, fastqFolder, newName))
                 os.system('rm -v {}/{}'.format(fastqFolder, f))
 
-#os.system("cd {}".format(fastqFolder))
-#os.system("gunzip {}/*{}".format(extracted, "fastq.gz"))
-#os.system("cd {}".format(currentDir))
-
 os.system("cp -v {}/*{} {}".format(extracted, "fasta", referenceFolder))
 
 fastaFile = ''
@@ -70,15 +67,70 @@ for f in files:
         if(f.endswith('fasta')):
                 fastaFile = f
 
+#if(re.search(r'scicomp\/home-pure', currentDir)):
+#        logger.info("Attempting installation of bowtie2 from {}".format(currentDir))
+#        os.system("module load bowtie2/2.3.5.1")
 
 response = os.popen("which bowtie2").read()
-logger.info("Found bowtie2 in {}".format(response))
+myPath = os.path.split(response)
+
+haltingVariable = False
+packages = { 'bowtie2' : False, 'samtools' : False, 'genomeCoverageBed' : False, 'freebayes' : False }
+
+## The next four blocks check for presence of prerequsite packages ##
+
+## Check Bowtie2
+if not os.path.exists(myPath[0]):
+        logger.warning("Package bowtie2 not installed and/or not found in $PATH!!!")
+        logger.warning("If home directory is {}, try module load bowtie2/2.3.5.1".format(currentDir))
+        haltingVariable = True
+else:
+        logger.info("Found bowtie2 in {}".format(response))
+        packages['bowtie2'] = True
+
 response = os.popen("which samtools").read()
-logger.info("Found samtools in {}".format(response))
+myPath = response.strip()
+
+## Check samtools
+if not os.path.isfile(myPath):
+        logger.warning("Package samtools not installed and/or not found in $PATH!!!")
+        haltingVariable = True
+else:
+        logger.info("Found samtools in {}".format(response))
+        packages['samtools'] = True
+
+## Check genomeCoverageBed
 response = os.popen("which genomeCoverageBed").read()
-logger.info("Found genomeCoverageBed in {}".format(response))
+myPath = response.strip()
+if not os.path.isfile(myPath):
+        logger.warning("Package genomeCoverageBed not installed and/or not found in $PATH!!!")
+        haltingVariable = True
+else:
+        logger.info("Found genomeCoverageBed in {}".format(response))
+        packages['genomeCoverageBed'] = True
+
+## Check freebayes
 response = os.popen("which freebayes").read()
-logger.info("Found freebayes in {}".format(response))
+myPath = response.strip()
+if not os.path.isfile(myPath):
+        logger.warning("Package freebayes not installed and/or not found in $PATH!!!")
+        haltingVariable = True
+else:
+        logger.info("Found freebayes in {}".format(response))
+        packages['freebayes'] = True
+
+## Terminate setup if one or more prerequistes are missing ##
+if(haltingVariable == True):
+        logger.error("The following packages are required to complete setup:")
+        time.sleep(0.5)
+        program = list(packages.keys())
+        for p in program:
+                if(packages[p] == False):
+                        print("\t" + p)
+        time.sleep(0.5)
+        logger.error("Setup for bowtieConsensusFromPairedFastq.nf terminating unsuccessfully...")
+        time.sleep(0.5)
+        sys.exit(1)
 
 refBaseName = re.sub(r'\.fasta', '', fastaFile)
 

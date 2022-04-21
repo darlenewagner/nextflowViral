@@ -12,10 +12,10 @@ To run using custom parameters for *--querydir* and *--reference*, for example, 
 
 Alternatively, to avoid typing complicated filepaths at the command line, simply edit the *querydir*, *reference*, *intermdir*, and/or *consensdir* in the ***nextflow.config*** file.
 
-**Prerequisites:** bowtie2, samtools, bedtools, and bcftools<br>
-*Required input folders* are paired_files/ and ref_180330_Calici36_SureSelectNoro_Capture/<br>
+**Prerequisites:** bowtie2, samtools, bedtools, freebayes, and nextflow<br>
+*Required/default input folders* are D70_paired_files/ and D70_reference_genome/<br>
 ***ref_180330_Calici36_SureSelectNoro_Capture/*** contains .fasta, .sizes, and bowtie2-build .bt2 files<br>
-*Expected output folders* are bowtieOut/ and new_multi_consensus/
+*Expected/default output folders* are bowtieConsensInterm/ and bowtieConsensOutput/
 
 ### Installation and setup for bowtieConsensusFromPairedFastq.nf ###
 To set up run environment with required input and output folders and appropriately-formatted files within input folders, enter the command:<br><br>

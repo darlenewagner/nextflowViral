@@ -23,9 +23,15 @@ process mapSAM {
   
   script:
   def (read1, read2) = reads
-  """
-  /apps/x86_64/bowtie2/bowtie2-2.3.5.1/bowtie2-2.3.5.1-linux-x86_64/bowtie2 -x $params.reference -1 "${read1}" -2 "${read2}" -S "${sampleId}.sam"
-  """
+  if( params.strictPairing == true )
+    """
+    /apps/x86_64/bowtie2/bowtie2-2.3.5.1/bowtie2-2.3.5.1-linux-x86_64/bowtie2 --no-unal --no-mixed -x $params.reference -1 "${read1}" -2 "${read2}" -S "${sampleId}.sam"
+    """
+  
+  else
+    """
+    /apps/x86_64/bowtie2/bowtie2-2.3.5.1/bowtie2-2.3.5.1-linux-x86_64/bowtie2 --no-unal --local -x $params.reference -1 "${read1}" -2 "${read2}" -S "${sampleId}.sam"    
+    """
   
 }
 

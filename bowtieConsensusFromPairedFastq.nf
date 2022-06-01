@@ -107,10 +107,17 @@ process makeVCF {
   
   output:
   tuple sampleId, path("${sampleId}.vcf") into bVCF
+//  tuple sampleId, path("${sampleId}.mpileup") into bVCF2
   
   script:
+  if( params.freebayes == true )
   """
-  freebayes --min-coverage 5 --no-indels --no-mnps --no-complex -f "${params.reference}".fasta "${sampleId}".sorted.bam >"${sampleId}".vcf  
+  freebayes --min-coverage 5 --no-indels --no-mnps --no-complex -f "${params.reference}".fasta "${sampleId}".sorted.bam > "${sampleId}".vcf
+  """
+  
+  else
+  """
+  bcftools mpileup -d 10000 -Ob -f "${params.reference}".fasta -Q 20 -q 20 --annotate FORMAT/AD,FORMAT/DP "${sampleId}".sorted.bam | bcftools call -mv --ploidy 1 -Ov --output "${sampleId}".vcf 
   """
 }
 
@@ -123,6 +130,7 @@ process prepVCF {
   
   output:
   tuple sampleId, path("${sampleId}.vcf.gz") into bgzVCF
+  tuple sampleId, path("${sampleId}.vcf.gz") into bgzVCF2
   tuple sampleId, path("${sampleId}.vcf.gz.csi") into idxVCF
   
   script:
@@ -130,6 +138,7 @@ process prepVCF {
   bgzip -c "${sampleId}".vcf > "${sampleId}".vcf.gz  
   bcftools index "${sampleId}".vcf.gz -o "${sampleId}".vcf.gz.csi
   """
+
 }
 
 process makeBcfConsensus {
@@ -238,6 +247,23 @@ process renameHeader2 {
   script:
   """
   sed -i "1s/.*/>"${sampleId}"/" "${sampleId}".atLeast25X.fa
-  cat "${sampleId}".atLeast25X.fa > "${sampleId}".atLeast25X.fasta  
+  cat "${sampleId}".atLeast25X.fa > "${sampleId}".atLeast25X.fasta 
+  """
+}
+
+
+process queryVCF {
+  
+  publishDir "$params.consensdir", mode: 'copy'
+  
+  input:
+  tuple sampleId, path("${sampleId}.vcf.gz") from bgzVCF2
+  
+  output:
+  tuple sampleId, path("${sampleId}.snp.tsv") into tabSNP
+  
+  script:
+  """
+  bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sampleId}".vcf.gz | perl $PWD/bcftoolsQuery.pl > "${sampleId}".snp.tsv
   """
 }

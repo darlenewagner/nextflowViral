@@ -40,7 +40,7 @@ parser.add_argument('refDir', type=readable_dir)
 
 parser.add_argument('readDir', type=readable_dir)
 
-parser.add_argument('--input', default='nextflow.config', type=ext_check('.config', argparse.FileType('r')))
+parser.add_argument('--config', default='nextflow.config', type=ext_check('.config', argparse.FileType('r')))
 
 parser.add_argument('--paired', default='Y', choices=['Y', 'N'])
 
@@ -81,14 +81,42 @@ os.system("samtools faidx {}/{}".format(referenceFolder, fileToIndex))
 os.system("cut -f 1,2 {}/{} > {}/{}".format(referenceFolder, faidxName, referenceFolder, sizesName))
 logger.info("fasta reference length indexing complete.")
 
-
 fastq = os.listdir(fastqFolder)
-
-
+previousFile = ''
+idx = 0
+pair = 0
+checkR1 = ''
+checkR2 = ''
 for fq in fastq:
-        print(fq)
-        newName = re.sub(r'\.gz', '', fq)
-        os.system('gunzip -c {}/{} > {}/{}'.format(fastqFolder, fq, fastqFolder, newName))
-        os.system('rm -v {}/{}'.format(fastqFolder, fq))
+        if(re.search(r'.*R1.*\.fastq\.gz', fq)):
+                #forwards.append(fq)
+                previousFile = fq
+                checkR1 = re.sub(r'R1', '', fq)
+                print(checkR1, " ", idx)
+        elif(re.search(r'.*R2.*\.fastq\.gz', fq)):
+                #reverses.append(fq)
+                #print(fq)
+                pair = idx
+                checkR2 = re.sub(r'R2', '', fq)
+                print(checkR2, " ", idx)
+        #checkR1 = re.sub(r'R1', '', forwards[pair])
+        #checkR2 = re.sub(r'R2', '', reverses[pair])
+        #if(checkR1 is checkR2):
+        #        
+        if((pair % 2) == 1):
+                print(pair)
+                logger.info("Fastq files {} and {} are paired.".format(previousFile, fq))
+                newName1 = re.sub(r'\.gz', '', previousFile)
+                newName2 = re.sub(r'\.gz', '', fq)
+                os.system('gunzip -c {}/{} > {}/{}'.format(fastqFolder, previousFile, fastqFolder, newName1))
+                os.system('gunzip -c {}/{} > {}/{}'.format(fastqFolder, fq, fastqFolder, newName2))
+        else:
+                print(pair)
+                logger.warning("Fastq pairing not detected! Unzipping will not be performed.")
+        idx = idx + 1
 
-logger.info("Fastq files gunzipped in {}.".format(fastqFolder))
+#
+#
+#os.system('rm -v {}/{}'.format(fastqFolder, fq))
+
+#logger.info("Fastq files gunzipped in {}.".format(fastqFolder))

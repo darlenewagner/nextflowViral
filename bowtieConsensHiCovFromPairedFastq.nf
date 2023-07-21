@@ -5,7 +5,14 @@
 // Sorted bam pileups and VCF files are also created and stored in params.intermdir
 // For reference-based assemblies, bases with less than 1X or 25X coverage are masked with 'N'
 // Indels and complex polymorphisms are excluded from the VCF files
-// Prerequisites: nextflow, bowtie2, samtools, freebayes, and genomeCoverageBed
+// Required Appl:      nextflow/21.04.3 or higher
+// 	    	       perl/5.16.1-MT or higher
+// 	    	       bowtie2/2.3.5.X or higher 
+//		       samtools/1.15.X or higher
+//		       BEDTools/2.26.X or higher
+//		       bcftools/1.10.X or higher
+//		       seqtk/1.3 or higher
+// Optional Application: freebayes/0.9.21
 
 Channel
   .fromFilePairs(params.querydir)
@@ -94,7 +101,7 @@ process indexBam {
   
   script:
   """
-  samtools index "${sampleId}".sorted.bam "${sampleId}".sorted.bai
+  samtools index -b "${sampleId}".sorted.bam "${sampleId}".sorted.bai
   """
 }
 

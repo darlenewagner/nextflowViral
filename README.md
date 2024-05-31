@@ -1,5 +1,5 @@
 # nextflowViral
-In the nextflowViral package, the pipeline script, ***bowtieConsensHiCovFromPairedFastq.nf***, is the most up-to-date and generates consensus genomes from paired fastq files mapped to reference at minimum 1X and 25X coverage.  To run, it requires Nextflow 21.04.3 and above and for setup, it requires Python 3.9.1 and above.
+In the nextflowViral package, the pipeline script, ***bowtieConsensHiCovFromPairedFastq.nf***, is written in Nextflow DSL 1 and is thus out-of-date. It generates consensus genomes from paired fastq files mapped to reference at minimum 1X and 25X coverage.  To run old_DSL1 files, Nextflow 21.04.3 is required.  To run the new pipelines compatible with DSL 2 (under learn_DSL2), Nextflow 23.10.0 and above is required.  For setup, Python 3.9.1 and above is required.
 
 ### Running bowtieConsensusFromPairedFastq.nf
 To run using input parameters in ***nextflow.config***, simply type the following after installation:

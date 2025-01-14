@@ -1,4 +1,5 @@
-#! /apps/x86_64/nextflow/21.04.3 nextflow
+nextflow.enable.dsl = 1
+//#! /apps/x86_64/nextflow/21.04.3 nextflow
 
 // This pipeline takes a Bowtie2-indexed reference and an arbitrary number of paired-end
 // .fastq files to create reference-based assembly .fasta files in params.consensdir

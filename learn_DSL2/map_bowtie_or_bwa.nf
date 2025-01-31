@@ -6,9 +6,9 @@ nextflow.enable.dsl=2
      nextflow run word_count.nf --reference <fasta file> --inputPair <paired fastq files>
  */
 
-params.reference = "$PWD/../bowtieConsensTestFiles/Sabin-2_reference/AY184220.1.fasta"
+params.reference = "${baseDir}/Sabin-2_reference/AY184220.1.fasta"
 
-params.inputPair = "$PWD/../../nextflow_2023_for_read_mapping/Polio_MiSeq_trimmomatic/LastEight_vs_3015821190/3015821227_S13_R?_001.fastq.gz"
+params.inputPair = "${baseDir}/Sabin-2_reference/3015821227_S13_R?_001.fastq.gz"
 
 process LOOKSY  // for debugging and sanity checking
   {

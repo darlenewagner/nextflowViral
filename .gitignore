@@ -1,6 +1,8 @@
 #Ignore these directories:
 bowtieConsensTestFiles/
 learn_DSL2/.nextflow/
+.nextflow*
 
 #Ignore these files:
 learn_DSL2/.nextflow.log*
+.nextflow*

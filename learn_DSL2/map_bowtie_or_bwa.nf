@@ -6,15 +6,15 @@ nextflow.enable.dsl=2
      nextflow run word_count.nf --reference <fasta file> --inputPair <paired fastq files>
  */
 
-params.reference = "${baseDir}/Sabin-2_reference/AY184220.1.fasta"
+params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1.fasta"
 
-params.inputPair = "${baseDir}/Sabin-2_reference/3015821227_S13_R?_001.fastq.gz"
+params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
 
 process LOOKSY  // for debugging and sanity checking
   {
 
     input:
-    path seeFile
+    tuple path(seeFile)
 
     output:
     stdout
@@ -35,15 +35,14 @@ process LOOKSY  // for debugging and sanity checking
 
 
 workflow {
-    Channel
-        .fromFilePairs(params.inputPair, checkIfExists: true)
-        .set { read_pairs_ch }
-
-    Channel.fromFile(params.reference, checkIfExists: true)
+   // Channel
+   //     .fromFilePairs(params.inputPair, checkIfExists: true)
+   //     .set { read_pairs_ch }
+   // Channel.fromFile(params.reference, checkIfExists: true)
     
-    LOOKSY(params.reference)
+    LOOKSY(params.inputPair) | view
     
-    LOOKSY.out.view()    
+   // LOOKSY.out.view()    
 
     // bowtie2map(read_pairs_ch, params.ref)
 

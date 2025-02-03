@@ -6,9 +6,12 @@ nextflow.enable.dsl=2
      nextflow run word_count.nf --reference <fasta file> --inputPair <paired fastq files>
  */
 
-params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1.fasta"
+params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+reference_name = file(params.reference).name
+reference_path = file(params.reference).parent
 
 params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
+params.output = "${baseDir}/output/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -41,22 +44,37 @@ process LOOKSY  // for debugging and sanity checking
   }
 
 
-workflow {
-   // Channel
-   //     .fromFilePairs(params.inputPair, checkIfExists: true)
-   //     .set { read_pairs_ch }
-   // Channel.fromFile(params.reference, checkIfExists: true)
-   //       .set { ref }
+process bowtie2map {
 
+    publishDir "$params.output", mode: 'copy',      
+
+    input:
+    tuple val(sample_name), path(reads)
+    path reference 
+
+    output:
+    tuple val(sample_name), path('*.sam')
+
+    script:
+    """
+    /apps/x86_64/bowtie2/bowtie2-2.3.5.1/bowtie2-2.3.5.1-linux-x86_64/bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+    """
+}
+
+
+
+
+workflow {
+    
     Channel
         .fromFilePairs(params.inputPair, checkIfExists: true)
         .set { read_pairs_ch }
 
 
-    LOOKSY(read_pairs_ch, params.reference) | view
+   // LOOKSY(read_pairs_ch, params.reference) | view
     
-   // LOOKSY.out.view()    
+   mapResults = bowtie2map(read_pairs_ch, reference_path)
 
-    // bowtie2map(read_pairs_ch, params.ref)
+   mapResults.view { "Bowtie2 Results: ${it}" }
 
 }

@@ -14,20 +14,21 @@ process LOOKSY  // for debugging and sanity checking
   {
 
     input:
-    tuple path(seeFile)
+    tuple val(sample_name), path(reads)
+    // val(reference)
 
     output:
     stdout
 
     script:
     """
-     if [[ "${seeFile}" =~ .*gz\$ ]];
+     if [[ "${reads[0]}" =~ .*gz\$ ]];
      then
-        printf '${seeFile} first line is: ->  '
-        gunzip -c ${seeFile} | head -1
+        printf '${reads[0]} first line is: ->  '
+        zcat ${reads[0]} | head -1
      else
-        printf '${seeFile} first line is ->  '
-        head -1 ${seeFile}
+        printf '${reads[0]} first line is ->  '
+        head -1 ${reads[0]}
      fi
     """
   
@@ -39,8 +40,14 @@ workflow {
    //     .fromFilePairs(params.inputPair, checkIfExists: true)
    //     .set { read_pairs_ch }
    // Channel.fromFile(params.reference, checkIfExists: true)
-    
-    LOOKSY(params.inputPair) | view
+   //       .set { ref }
+
+    Channel
+        .fromFilePairs(params.inputPair, checkIfExists: true)
+        .set { read_pairs_ch }
+
+
+    LOOKSY(read_pairs_ch) | view
     
    // LOOKSY.out.view()    
 

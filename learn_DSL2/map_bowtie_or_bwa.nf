@@ -15,20 +15,26 @@ process LOOKSY  // for debugging and sanity checking
 
     input:
     tuple val(sample_name), path(reads)
-    // val(reference)
+    path(reference)
 
     output:
     stdout
 
     script:
     """
-     if [[ "${reads[0]}" =~ .*gz\$ ]];
+     printf '${reference} first line is: -> '
+     head -1 ${reference}
+     if [[ "${reads[0]}" =~ .*gz\$ ]] && [[ "${reads[1]}" =~ .*gz\$ ]];
      then
         printf '${reads[0]} first line is: ->  '
         zcat ${reads[0]} | head -1
+        printf '${reads[1]} first line is: ->  '
+        zcat ${reads[1]} | head -1
      else
         printf '${reads[0]} first line is ->  '
         head -1 ${reads[0]}
+        printf '${reads[1]} first line is: ->  '
+        head -1 ${reads[1]} 
      fi
     """
   
@@ -47,7 +53,7 @@ workflow {
         .set { read_pairs_ch }
 
 
-    LOOKSY(read_pairs_ch) | view
+    LOOKSY(read_pairs_ch, params.reference) | view
     
    // LOOKSY.out.view()    
 

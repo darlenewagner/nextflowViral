@@ -11,7 +11,7 @@ reference_name = file(params.reference).name
 reference_path = file(params.reference).parent
 
 params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
-params.output = "${baseDir}/output/"
+params.output = "${baseDir}/../output/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -46,14 +46,14 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map {
 
-    publishDir "$params.output", mode: 'copy',      
-
+    publishDir "${baseDir}/../output/", mode: 'copy'
+    
     input:
     tuple val(sample_name), path(reads)
     path reference 
 
     output:
-    tuple val(sample_name), path('*.sam')
+    tuple val(sample_name), path("${sample_name}.sam")    
 
     script:
     """

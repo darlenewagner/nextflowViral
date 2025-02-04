@@ -1,9 +1,15 @@
 #Ignore these directories:
 bowtieConsensTestFiles/
 output/
+intermediate/
 learn_DSL2/.nextflow/
 .nextflow*
 
 #Ignore these files:
+Singularity/bowtie*
+Singularity/samtools*
+Singularity/bcftools*
+Singularity/vcf*
+Singularity/*.sif
 learn_DSL2/.nextflow.log*
 .nextflow*

@@ -62,6 +62,22 @@ process bowtie2map {
 }
 
 
+process bowtie2map_singularity {
+
+    publishDir "${baseDir}/../output/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path(reads)
+    path reference 
+
+    output:
+    tuple val(sample_name), path("${sample_name}.sam")    
+
+    script:
+    """
+    singularity exec "${baseDir}/../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+    """
+}
 
 
 workflow {
@@ -73,7 +89,9 @@ workflow {
 
    // LOOKSY(read_pairs_ch, params.reference) | view
     
-   mapResults = bowtie2map(read_pairs_ch, reference_path)
+   //  mapResults = bowtie2map(read_pairs_ch, reference_path)
+
+   mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
 
    mapResults.view { "Bowtie2 Results: ${it}" }
 

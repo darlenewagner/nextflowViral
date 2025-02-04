@@ -7,9 +7,14 @@ learn_DSL2/.nextflow/
 
 #Ignore these files:
 Singularity/bowtie*
+bowtie*
 Singularity/samtools*
+samtools*
 Singularity/bcftools*
+bcftools*
 Singularity/vcf*
+vcf*
 Singularity/*.sif
+*.sif
 learn_DSL2/.nextflow.log*
 .nextflow*

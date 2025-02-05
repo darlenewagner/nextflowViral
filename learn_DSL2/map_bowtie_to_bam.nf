@@ -81,10 +81,19 @@ process bowtie2map_singularity {
 
 
 process sam2bam {
+
+    publishDir "${baseDir}/../output/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path("${sample_name}.sam")
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.bam")
+
     script:
-  """
-  samtools view "${sampleId}".sam -o "${sampleId}".bam
-  """
+    """
+    samtools view "${sample_name}".sam -o "${sample_name}".bam
+    """
 
 }
 
@@ -102,5 +111,7 @@ workflow {
    mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
 
    mapResults.view { "Bowtie2 Results: ${it}" }
+
+   bamResults = sam2bam(mapResults)
 
 }

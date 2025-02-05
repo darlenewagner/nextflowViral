@@ -50,8 +50,8 @@ process sam2bam {
   
   output:
   tuple sampleId, path("${sampleId}.bam") into bamOut
-  
-  script:
+
+script:
   """
   samtools view "${sampleId}".sam -o "${sampleId}".bam  
   """

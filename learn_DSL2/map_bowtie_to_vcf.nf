@@ -130,6 +130,24 @@ process indexBam {
 
 }
 
+process makeVCF {
+
+    publishDir "${baseDir}/../output/", mode: 'copy'
+
+    input:
+    tuple val(sample_name), path("${sample_name}.sorted.bam")
+    path reference
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.vcf")
+    
+    script:
+    """
+    bcftools mpileup -d 35000 -Ob -f "${reference_name}".fasta -Q 20 -q 20 --annotate FORMAT/AD,FORMAT/DP "${sample_name}".sorted.bam | bcftools call -mv --ploidy 1 -Ov --output "${sample_name}".vcf
+    """
+    
+}
+
 workflow {
     
     Channel
@@ -150,6 +168,7 @@ workflow {
    sortedBam = sortBam(bamResults)
    
    indexedBam = indexBam(sortedBam)
-   
+
+    myVCF = makeVCF(sortedBam, reference_path)   
 
 }

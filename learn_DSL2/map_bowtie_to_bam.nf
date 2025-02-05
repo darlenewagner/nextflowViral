@@ -97,6 +97,22 @@ process sam2bam {
 
 }
 
+process sortBam {
+
+    publishDir "${baseDir}/../output/", mode: 'copy'
+
+    input:
+    tuple val(sample_name), path("${sample_name}.bam")
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.sorted.bam")
+    
+    script:
+    """
+    samtools sort "${sample_name}".bam -o "${sample_name}".sorted.bam
+    """
+}
+
 workflow {
     
     Channel
@@ -113,5 +129,8 @@ workflow {
    mapResults.view { "Bowtie2 Results: ${it}" }
 
    bamResults = sam2bam(mapResults)
+
+   sortedBam = sortBam(bamResults)
+   
 
 }

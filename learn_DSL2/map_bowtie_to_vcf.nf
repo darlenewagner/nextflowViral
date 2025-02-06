@@ -171,4 +171,6 @@ workflow {
 
     myVCF = makeVCF(sortedBam, reference_path)   
 
+    myVCF.view { "SNP calls: ${it}" }
+    
 }

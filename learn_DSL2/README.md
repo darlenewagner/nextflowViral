@@ -7,3 +7,9 @@
 `nextflow run learn_DSL2/map_bowtie_or_bwa.nf --reference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1" --inputPair "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R{1,2}_001.fastq.gz"`
 
 ### Coming Soon: Singularity Bowtie2
+
+`module load nextflow/24.04.2`
+
+`python Singularity/get_bowtie2.py`
+
+`nextflow run learn_DSL2/map_bowtie_or_bwa.nf --reference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"`

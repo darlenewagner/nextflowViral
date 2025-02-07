@@ -149,6 +149,7 @@ process makeVCF {
 }
 
 process zipVCF {
+    
     publishDir "${baseDir}/../output/", mode: 'copy'
     
     input:
@@ -156,13 +157,48 @@ process zipVCF {
     
     output:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
-    tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
+
     
     script:
     """
       bgzip -c "${sample_name}".vcf > "${sample_name}".vcf.gz  
-      bcftools index "${sample_name}".vcf.gz -o "${sample_name}".vcf.gz.csi
+
     """
+}
+
+process csiVCF {
+
+   publishDir "${baseDir}/../output/", mode: 'copy'
+
+    input:
+    tuple val(sample_name), path("${sample_name}.vcf.gz")
+
+    output:
+    tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
+
+    script:
+    """
+      bcftools index "${sample_name}".vcf.gz -o "${sample_name}".vcf.gz.csi    
+    """
+ }
+
+process makeBcfConsensus {
+    
+    publishDir "${baseDir}/../output/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path("${sample_name}.vcf.gz")
+    tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
+    path reference
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.fasta")
+    
+    script:
+    """
+    cat "${reference}".fasta | bcftools consensus "${sample_name}".vcf.gz > "${sample_name}".fasta
+    """
+    
 }
 
 
@@ -171,8 +207,8 @@ workflow {
     Channel
         .fromFilePairs(params.inputPair, checkIfExists: true)
         .set { read_pairs_ch }
-
-
+   
+   
    // LOOKSY(read_pairs_ch, params.reference) | view
     
    //  mapResults = bowtie2map(read_pairs_ch, reference_path)
@@ -193,6 +229,9 @@ workflow {
     
     myVCFz = zipVCF(myVCF)
 
-  //  fasta = makeBcfConsensus(myVCFz, reference_path)
+    myVCFcsi = csiVCF(myVCFz)
 
+    fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
+
+    fasta.view { "SNP calls: ${it}" }
 }

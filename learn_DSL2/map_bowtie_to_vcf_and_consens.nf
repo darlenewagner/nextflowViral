@@ -148,6 +148,24 @@ process makeVCF {
     
 }
 
+process zipVCF {
+    publishDir "${baseDir}/../output/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path("${sample_name}.vcf")
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.vcf.gz")
+    tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
+    
+    script:
+    """
+      bgzip -c "${sample_name}".vcf > "${sample_name}".vcf.gz  
+      bcftools index "${sample_name}".vcf.gz -o "${sample_name}".vcf.gz.csi
+    """
+}
+
+
 workflow {
     
     Channel
@@ -175,6 +193,6 @@ workflow {
     
     myVCFz = zipVCF(myVCF)
 
-    fasta = makeBcfConsensus(myVCFz, reference_path)
+  //  fasta = makeBcfConsensus(myVCFz, reference_path)
 
 }

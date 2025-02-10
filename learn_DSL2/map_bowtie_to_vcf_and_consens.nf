@@ -8,6 +8,7 @@ nextflow.enable.dsl=2
 
 params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name
+reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
 params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
@@ -196,7 +197,7 @@ process makeBcfConsensus {
     
     script:
     """
-    cat "${reference}".fasta | bcftools consensus "${sample_name}".vcf.gz > "${sample_name}".fasta
+    cat "${reference}"/"${reference_name}".fasta | bcftools consensus "${sample_name}".vcf.gz --sample "polio_sample_3_screened_trim.sorted.bam" -o "${sample_name}".fasta
     """
     
 }
@@ -233,5 +234,5 @@ workflow {
 
     fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
 
-    fasta.view { "SNP calls: ${it}" }
+    fasta.view { "Consensus FASTA: ${it}" }
 }

@@ -197,7 +197,7 @@ process makeBcfConsensus {
     
     script:
     """
-    cat "${reference}"/"${reference_name}".fasta | bcftools consensus "${sample_name}".vcf.gz --sample "polio_sample_3_screened_trim.sorted.bam" -o "${sample_name}".fasta
+    cat "${reference}"/"${reference_name}".fasta | bcftools consensus "${sample_name}".vcf.gz --sample "${sample_name}".sorted.bam -o "${sample_name}".fasta
     """
     
 }

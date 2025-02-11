@@ -2,32 +2,32 @@
 
 nextflow.enable.dsl=2
 
-params.reads = "$projectDir/Polio_MiSeq_with_QC/FirstFive_vs_3015815424/*_R{1,2}_001.fastq"
-params.reference = "$projectDir/NCBI_Polio_reference/AY184220.1"
-params.outdir = "$projectDir/redevelop_Interm_2024"
+// Counts reads in paired fastq.gz file
+
+params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
+params.outdir = "${baseDir}/../learn_DSL2/local_output/"
 
 process READCOUNT {
 
-//    tag { see }
-    publishDir params.outdir, mode:"copy"
+    publishDir "${baseDir}/../learn_DSL2/local_output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path(reads)
 
     output:
-    path "${sample_name}.txt"
+    path "${sample_name}.readcounts.txt"
 
     script:
     """
-    echo ${sample_name} > ${sample_name}.txt
-    awk 'END {print NR/4}' ${reads[0]} >> ${sample_name}.txt
-    awk 'END {print NR/4}' ${reads[1]} >> ${sample_name}.txt
+    echo ${sample_name} > ${sample_name}.readcounts.txt
+    zcat ${reads[0]} | awk 'END {print NR/4}' >> ${sample_name}.readcounts.txt
+    zcat ${reads[1]} | awk 'END {print NR/4}' >> ${sample_name}.readcounts.txt
     """
 }
 
 workflow {
     Channel
-        .fromFilePairs(params.reads, checkIfExists: true)
+        .fromFilePairs(params.inputPair, checkIfExists: true)
         .set { read_pairs_ch }
 
     READCOUNT(read_pairs_ch)

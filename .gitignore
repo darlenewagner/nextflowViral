@@ -2,7 +2,6 @@
 bowtieConsensTestFiles/
 output/
 intermediate/
-learn_DSL2/.nextflow/
 .nextflow*
 
 #Ignore these files:

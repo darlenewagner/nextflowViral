@@ -1,3 +1,9 @@
+### Running test pipeline, script4.nf
+
+`module load nextflow/24.04.2`
+
+`nextflow run learn_DSL2/script4.nf`
+
 ### Running the Nextflow and Bowtie test pipeline:
 
 `module load nextflow/24.04.2`

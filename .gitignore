@@ -18,5 +18,3 @@ Singularity/*.sif
 learn_DSL2/.nextflow.log*
 .nextflow*
 
-#but including subfolder
-!learn_DSL2/learn_DSL2/local_output/

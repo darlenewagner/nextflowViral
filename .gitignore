@@ -17,4 +17,4 @@ Singularity/*.sif
 *.sif
 learn_DSL2/.nextflow.log*
 .nextflow*
-
+learn_DSL2/learn_DSL2/local_output/3015*.txt

@@ -12,7 +12,7 @@ reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
 params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
-params.output = "${baseDir}/../output/"
+params.output = "${baseDir}/output/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -47,7 +47,7 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path(reads)
@@ -65,7 +65,7 @@ process bowtie2map {
 
 process bowtie2map_singularity {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path(reads)
@@ -76,14 +76,14 @@ process bowtie2map_singularity {
 
     script:
     """
-    singularity exec "${baseDir}/../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+    singularity exec "${baseDir}/"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
     """
 }
 
 
 process sam2bam {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
@@ -100,7 +100,7 @@ process sam2bam {
 
 process sortBam {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.bam")
@@ -116,7 +116,7 @@ process sortBam {
 
 process indexBam {
     
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -133,7 +133,7 @@ process indexBam {
 
 process makeVCF {
 
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -151,7 +151,7 @@ process makeVCF {
 
 process zipVCF {
     
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf")
@@ -169,7 +169,7 @@ process zipVCF {
 
 process csiVCF {
 
-   publishDir "${baseDir}/../output/", mode: 'copy'
+   publishDir "${baseDir}/output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -185,7 +185,7 @@ process csiVCF {
 
 process makeBcfConsensus {
     
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -202,6 +202,9 @@ process makeBcfConsensus {
     
 }
 
+// process makeGenomeCov {
+//
+// }
 
 workflow {
     

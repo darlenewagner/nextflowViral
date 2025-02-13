@@ -220,6 +220,42 @@ process makeGenomeCov {
    
  }
 
+process makeCoverageMask {
+
+   publishDir "${baseDir}/output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.bedGraph")
+   //path reference
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
+
+   script:
+   """
+   awk '{ if (\$3 < 5) {print \$1"\t" \$2"\t" \$3"\t" "N" } else {print \$1"\t" \$2"\t" \$3"\t"}}' "${sample_name}".bedGraph > "${sample_name}".bedGraph.FiveX
+   """
+  
+}
+
+process maskWithNs {
+   
+   publishDir "${baseDir}/output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
+   tuple val(sample_name), path("${sample_name}.fasta")
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.fiveX.fasta")
+      
+   script:
+   """
+   seqtk mutfa "${sample_name}".fasta "${sample_name}".bedGraph.FiveX > "${sample_name}".fiveX.fasta 
+   """
+}
+
+
 workflow {
     
     Channel
@@ -254,4 +290,9 @@ workflow {
     fasta.view { "Consensus FASTA: ${it}" }
 
     bedGr = makeGenomeCov(sortedBam, reference_path)
+
+    bed5X = makeCoverageMask(bedGr)
+
+    fastaN = maskWithNs(bed5X, fasta)
+    
 }

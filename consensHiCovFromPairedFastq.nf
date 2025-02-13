@@ -169,7 +169,7 @@ process zipVCF {
 
 process csiVCF {
 
-   publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -255,6 +255,22 @@ process maskWithNs {
    """
 }
 
+process queryVCF {
+   
+   publishDir "${baseDir}/output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.vcf.gz")
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.snp.tsv")
+   
+   script:
+   """
+   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
+   """
+}
+
 
 workflow {
     
@@ -294,5 +310,7 @@ workflow {
     bed5X = makeCoverageMask(bedGr)
 
     fastaN = maskWithNs(bed5X, fasta)
+
+    SNPs = queryVCF(myVCFz)
     
 }

@@ -12,6 +12,7 @@ my $found_name = 0;
 my $start = 0;
 my $end = 0;
 my $prevCoverage = 0;
+my $total = 0;
 my @F = ();
 my @Regions = ();
 
@@ -20,10 +21,12 @@ while(<COVERAGE>)
  {
     @F = split(/\s+/, $_);
 
-    if(($F[0] =~ /^[A-Z].+/) && ($found_name = 0))
-       {
-	 $name = $F[0];
-	 $found_name = 1;
+    if($F[0] =~ /^\w/)
+    {
+	
+	$name = $F[0];
+	#$found_name = 1;
+	$total++;
        }
 
     my $coverage = $F[2];
@@ -53,14 +56,15 @@ while(<COVERAGE>)
       }
  }
 
- my $str = sprintf("%0.2f", $sum/$count);
- print "Coverage, ", $str, "x\n";
+ my $str = sprintf("%0.1f", $sum/$count);
+ print $name, " coverage, ", $str, "x\n";
 
  print "\nSegments:\n";
 
  for( my $r = 1; $r < scalar @Regions; $r = $r + 2)
    {
-      print $Regions[$r] - $Regions[$r - 1], "\t";
+       my $percentages = sprintf("%0.1f", 100*($Regions[$r] - $Regions[$r - 1])/$total);
+       print $percentages, "\t";
    }
 
 

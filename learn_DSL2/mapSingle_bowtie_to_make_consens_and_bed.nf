@@ -200,6 +200,24 @@ process makeBcfConsensus {
     
 }
 
+process makeGenomeCov {
+
+   publishDir "${baseDir}/../output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.sorted.bam")
+   path reference
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.bedGraph")
+   
+   script:
+   """
+   genomeCoverageBed -ibam "${sample_name}".sorted.bam -d -g "${reference}"/"${reference_name}".sizes > "${sample_name}".bedGraph
+   """
+   
+ }
+
 
 workflow {
     
@@ -233,4 +251,6 @@ workflow {
     fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
 
     fasta.view { "Consensus FASTA: ${it}" }
+
+    bedGr = makeGenomeCov(sortedBam, reference_path)
 }

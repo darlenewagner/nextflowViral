@@ -54,7 +54,7 @@ process bowtie2map {
 
     script:
     """
-    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name}.sam"
+    bowtie2 --no-unal --no-mixed --very-sensitive-local -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name}.sam"
     """
 }
 

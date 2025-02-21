@@ -3,6 +3,7 @@ bowtieConsensTestFiles/
 expBowtieConsensTestFiles/
 output/
 intermediate/
+prevOutput/
 .nextflow*
 
 #Ignore these files:

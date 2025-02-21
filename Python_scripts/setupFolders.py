@@ -24,58 +24,58 @@ logger.addHandler(ch)
 
 currentDir = os.getcwd()
 
-parser = argparse.ArgumentParser(description='Creates the input folders under bowtieConsensTestFiles/, along with output folders, intermediate/ and output/, expected as parameters for bowtieConsensusFromPairedFastq.nf', usage="python setupFolders.py --input filepath/fileNames.tar(.gz)")
+parser = argparse.ArgumentParser(description='Creates the input folders under bowtieConsensTestFiles/, along with output folders, intermediate/ and output/, expected as parameters for consensHiCovFromPairedFastq.nf', usage="python setupFolders.py --input archiveOfFiles.tar.gz")
 
-parser.add_argument('--input', default='bowtieConsensTestFiles.tar', type=ext_check('.tar', 'tar.gz', argparse.FileType('r')))
+parser.add_argument('--input', default='bowtieConsensTestFiles.tar.gz', type=ext_check('.tar', 'tar.gz', argparse.FileType('r')))
 
 ## parse and print input files from .tar
 args = parser.parse_args()
 print(args.input.name)
-extracted = re.sub(r'\.tar', '', args.input.name)
+extracted = re.sub(r'\.tar.gz', '', args.input.name)
 
-## declare input and output folders expected by bowtieConsensusFromPairedFastq.nf
-fastqFolder = 'D70_paired_files'
-referenceFolder = 'D70_reference_genome'
-intermFolder = 'bowtieConsensInterm'
-outputFolder = 'bowtieConsensOutput'
+## declare input and output folders expected by consensHiCovFromPairedFastq.nf
+## fastqFolder = 'D70_paired_files'
+## referenceFolder = 'D70_reference_genome'
+intermFolder = 'intermediate'
+outputFolder = 'output'
 
-logger.info("Creating input folders {} and {}".format(fastqFolder, referenceFolder))
-os.system("mkdir {}".format(fastqFolder))
-os.system("mkdir {}".format(referenceFolder))
+##logger.info("Creating input folders {} and {}".format(fastqFolder, referenceFolder))
+##os.system("mkdir {}".format(fastqFolder))
+##os.system("mkdir {}".format(referenceFolder))
 
 logger.info("Creating input folders {} and {}".format(intermFolder, outputFolder))
 os.system("mkdir {}".format(intermFolder))
 os.system("mkdir {}".format(outputFolder))
 
 logger.info("Opening data archive {}".format(args.input.name))
-os.system("tar -xvf {}".format(args.input.name))
-os.system("cp -v {}/*{} {}".format(extracted, "fastq.gz", fastqFolder))
+os.system("tar -xvfz {}".format(args.input.name))
+##os.system("cp -v {}/*{} {}".format(extracted, "fastq.gz", fastqFolder))
 
-logger.info("Gunzipping .fastq.gz in {}".format(fastqFolder))
-files = os.listdir(fastqFolder)
-for f in files:
-        if(f.endswith('gz')):
-                newName = re.sub(r'\.gz', '', f)
-                os.system('gunzip -c {}/{} > {}/{}'.format(fastqFolder, f, fastqFolder, newName))
-                os.system('rm -v {}/{}'.format(fastqFolder, f))
+##logger.info("Gunzipping .fastq.gz in {}".format(fastqFolder))
+##files = os.listdir(fastqFolder)
+##for f in files:
+##        if(f.endswith('gz')):
+##                newName = re.sub(r'\.gz', '', f)
+##                os.system('gunzip -c {}/{} > {}/{}'.format(fastqFolder, f, fastqFolder, newName))
+##                os.system('rm -v {}/{}'.format(fastqFolder, f))
 
-os.system("cp -v {}/*{} {}".format(extracted, "fasta", referenceFolder))
+##os.system("cp -v {}/*{} {}".format(extracted, "fasta", referenceFolder))
 
-fastaFile = ''
-files = os.listdir(referenceFolder)
-for f in files:
-        if(f.endswith('fasta')):
-                fastaFile = f
+##fastaFile = ''
+##files = os.listdir(referenceFolder)
+##for f in files:
+##       if(f.endswith('fasta')):
+##                fastaFile = f
 
-#if(re.search(r'scicomp\/home-pure', currentDir)):
-#        logger.info("Attempting installation of bowtie2 from {}".format(currentDir))
-#        os.system("module load bowtie2/2.3.5.1")
+if(re.search(r'scicomp\/home-pure', currentDir)):
+        logger.info("Attempting installation of bowtie2 from {}".format(currentDir))
+        os.system("module load bowtie2/2.3.5.1")
 
 response = os.popen("which bowtie2").read()
 myPath = os.path.split(response)
 
 haltingVariable = False
-packages = { 'bowtie2' : False, 'samtools' : False, 'genomeCoverageBed' : False, 'freebayes' : False, 'nextflow' : False }
+packages = { 'bowtie2' : False, 'samtools' : False, 'genomeCoverageBed' : False, 'nextflow' : False }
 
 ## The next four blocks check for presence of prerequsite packages ##
 
@@ -108,16 +108,6 @@ if not os.path.isfile(myPath):
 else:
         logger.info("Found genomeCoverageBed in {}".format(response))
         packages['genomeCoverageBed'] = True
-
-## Check freebayes
-response = os.popen("which freebayes").read()
-myPath = response.strip()
-if not os.path.isfile(myPath):
-        logger.warning("Package freebayes not installed and/or not found in $PATH!!!")
-        haltingVariable = True
-else:
-        logger.info("Found freebayes in {}".format(response))
-        packages['freebayes'] = True
 
 ## Check nextflow
 response = os.popen("which nextflow").read()

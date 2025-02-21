@@ -24,7 +24,7 @@ logger.addHandler(ch)
 
 currentDir = os.getcwd()
 
-parser = argparse.ArgumentParser(description='Creates the input folders, fileName/ and referenceFileName/, along with output folders, bowtieConsensInterm/ and bowtieConsensOutput/, expected as parameters for bowtieConsensusFromPairedFastq.nf', usage="python setupFolders.py --input filepath/fileNames.tar(.gz)")
+parser = argparse.ArgumentParser(description='Creates the input folders under bowtieConsensTestFiles/, along with output folders, intermediate/ and output/, expected as parameters for bowtieConsensusFromPairedFastq.nf', usage="python setupFolders.py --input filepath/fileNames.tar(.gz)")
 
 parser.add_argument('--input', default='bowtieConsensTestFiles.tar', type=ext_check('.tar', 'tar.gz', argparse.FileType('r')))
 

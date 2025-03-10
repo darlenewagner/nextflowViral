@@ -151,6 +151,23 @@ process makeGenomeCov {
  }
 
 
+process callPerl {
+  
+  publishDir "${baseDir}/../output/", mode: 'copy'
+
+  input:
+  tuple val(sample_name), path("${sample_name}.bedGraph")
+
+  output:
+  stdout
+
+  script:
+  """
+  perl ${baseDir}/../Perl_scripts/coverageStatsFromBedGraph.pl "${sample_name}".bedGraph
+  """
+  
+}
+
 
 workflow {
     
@@ -178,5 +195,7 @@ workflow {
    bedGr = makeGenomeCov(sortedBam, reference_path)
 
    bedGr.view { "Coverage Plot: ${it}" }
+
+   callPerl(bedGr).view()
 
 }

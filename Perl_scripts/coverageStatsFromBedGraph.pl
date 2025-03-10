@@ -1,9 +1,16 @@
 #!/apps/x86_64/perl/perl-5.16.1-MT/bin/perl
 use strict;
+use Getopt::Long;
+use List::Util qw(max);
 
 my $bedGraph = $ARGV[0];
 
 open(COVERAGE, $bedGraph) || die "Can't find .bedGraph file, $bedGraph $!";
+
+my $verbose = 0;
+
+## --verbose flag sets $verbose to 1
+GetOptions('verbose' => \$verbose);
 
 my $count = 0;
 my $sum = 0;
@@ -56,16 +63,33 @@ while(<COVERAGE>)
       }
  }
 
- my $str = sprintf("%0.1f", $sum/$count);
- print $name, " coverage, ", $str, "x\n";
+if($verbose)
+  {
+   my $str = sprintf("%0.1f", $sum/$count);
+   print $name, ", average depth of coverage, ", $str, "x\n";
 
- print "\nSegments:\n";
+   print "\nSegments for breadth of coverage (percent):\n";
+   
+   for( my $r = 1; $r < scalar @Regions; $r = $r + 2)
+     {
+         my $percentages = sprintf("%0.1f", 100*($Regions[$r] - $Regions[$r - 1])/$total);
+         print $percentages, "\t";
+     }
+  }
+else
+  {
+      my $str = sprintf("%0.1f", $sum/$count);
 
- for( my $r = 1; $r < scalar @Regions; $r = $r + 2)
-   {
-       my $percentages = sprintf("%0.1f", 100*($Regions[$r] - $Regions[$r - 1])/$total);
-       print $percentages, "\t";
-   }
+     my @percentage = ();
+      
+   for( my $r = 1; $r < scalar @Regions; $r = $r + 2)
+     {
+         push @percentage, 100*($Regions[$r] - $Regions[$r - 1])/$total;
+        # print $percentages, "\t";
+     }
 
-
-print "\n\n";
+      my $maxBreadth = sprintf("%0.1f", max(@percentage));
+      print $name, "\tAvg. Depth: ", $str, "\tMax. Breadth: ", $maxBreadth, "%\n";
+      
+  }
+print "\n";

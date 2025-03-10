@@ -60,12 +60,15 @@ while(<COVERAGE>)
       {
 	  push @Regions, $F[1];
 	  $prevCoverage = $coverage;
+	  $count++;
       }
     else
       {
           $prevCoverage = $coverage;
       }
  }
+
+push @Regions, $count;
 
 if($verbose)
   {

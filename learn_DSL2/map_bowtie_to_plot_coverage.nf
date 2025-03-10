@@ -132,6 +132,25 @@ process indexBam {
 
 }
 
+process makeGenomeCov {
+
+   publishDir "${baseDir}/../output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.sorted.bam")
+   path reference
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.bedGraph")
+   
+   script:
+   """
+   genomeCoverageBed -ibam "${sample_name}".sorted.bam -d -g "${reference}"/"${reference_name}".sizes > "${sample_name}".bedGraph
+   """
+   
+ }
+
+
 
 workflow {
     
@@ -156,6 +175,8 @@ workflow {
    
    indexedBam = indexBam(sortedBam)
 
-   
+   bedGr = makeGenomeCov(sortedBam, reference_path)
+
+   bedGr.view { "Coverage Plot: ${it}" }
 
 }

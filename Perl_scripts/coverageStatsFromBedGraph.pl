@@ -7,6 +7,10 @@ my $bedGraph = $ARGV[0];
 
 open(COVERAGE, $bedGraph) || die "Can't find .bedGraph file, $bedGraph $!";
 
+my $first = rindex($bedGraph, '/');
+my $second = index($bedGraph, '.');
+my $reads = substr($bedGraph, $first + 1, $second - $first - 1);
+
 my $verbose = 0;
 
 ## --verbose flag sets $verbose to 1
@@ -66,7 +70,7 @@ while(<COVERAGE>)
 if($verbose)
   {
    my $str = sprintf("%0.1f", $sum/$count);
-   print $name, ", average depth of coverage, ", $str, "x\n";
+   print $reads, " mapped to ", $name, ", average depth of coverage, ", $str, "x\n";
 
    print "\nSegments for breadth of coverage (percent):\n";
    

@@ -6,14 +6,15 @@ nextflow.enable.dsl=2
 
  */
 
-params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+params.reference = "${baseDir}/../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name
 reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
-params.inputSingle = "${baseDir}/../bowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq"
+params.inputSingle = "${baseDir}/../expBowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq"
 inputSingle_path = file(params.inputSingle).parent
-params.output = "${baseDir}/../output/"
+params.output = "${baseDir}/output/"
+params.intermediate = "${baseDir}/intermediate/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -43,18 +44,18 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     path(sample_name)
     path reference 
 
     output:
-    tuple val(sample_name), path("${sample_name}.sam")    
+    tuple val(sample_name.baseName), path("${sample_name.baseName}.sam")    
 
     script:
     """
-    bowtie2 --no-unal --no-mixed --very-sensitive-local -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name}.sam"
+    bowtie2 --no-unal -x "${reference}"/"${reference_name}" -U "${sample_name}" -S "${sample_name.baseName}.sam"
     """
 }
 
@@ -81,7 +82,7 @@ process bowtie2map_singularity {
 
 process sam2bam {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
@@ -129,76 +130,6 @@ process indexBam {
 
 }
 
-process makeVCF {
-
-    publishDir "${baseDir}/../output/", mode: 'copy'
-
-    input:
-    tuple val(sample_name), path("${sample_name}.sorted.bam")
-    path reference
-    
-    output:
-    tuple val(sample_name), path("${sample_name}.vcf")
-    
-    script:
-    """
-    bcftools mpileup -d 35000 -Ob -f "${reference}"/"${reference_name}".fasta -Q 20 -q 20 --annotate FORMAT/AD,FORMAT/DP "${sample_name}".sorted.bam | bcftools call -mv --ploidy 1 -Ov --output "${sample_name}".vcf
-    """
-    
-}
-
-process zipVCF {
-    
-    publishDir "${baseDir}/../output/", mode: 'copy'
-    
-    input:
-    tuple val(sample_name), path("${sample_name}.vcf")
-    
-    output:
-    tuple val(sample_name), path("${sample_name}.vcf.gz")
-
-    
-    script:
-    """
-      bgzip -c "${sample_name}".vcf > "${sample_name}".vcf.gz  
-
-    """
-}
-
-process csiVCF {
-
-   publishDir "${baseDir}/../output/", mode: 'copy'
-
-    input:
-    tuple val(sample_name), path("${sample_name}.vcf.gz")
-
-    output:
-    tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
-
-    script:
-    """
-      bcftools index "${sample_name}".vcf.gz -o "${sample_name}".vcf.gz.csi    
-    """
- }
-
-process makeBcfConsensus {
-    
-    publishDir "${baseDir}/../output/", mode: 'copy'
-    
-    input:
-    tuple val(sample_name), path("${sample_name}.vcf.gz")
-    tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
-    path reference
-    
-    output:
-    tuple val(sample_name), path("${sample_name}.fasta")
-    
-    script:
-    """
-    cat "${reference}"/"${reference_name}".fasta | bcftools consensus "${sample_name}".vcf.gz --sample "${sample_name}".sorted.bam -o "${sample_name}".fasta
-    """
-    
-}
 
 process makeGenomeCov {
 
@@ -219,6 +150,24 @@ process makeGenomeCov {
  }
 
 
+process callPerl {
+  
+  publishDir "${baseDir}/../output/", mode: 'copy'
+
+  input:
+  tuple val(sample_name), path("${sample_name}.bedGraph")
+
+  output:
+  stdout
+
+  script:
+  """
+  perl ${baseDir}/../Perl_scripts/coverageStatsFromBedGraph.pl "${sample_name}".bedGraph
+  """
+  
+}
+
+
 workflow {
     
     Channel
@@ -230,7 +179,7 @@ workflow {
     
    //  mapResults = bowtie2map(fastq_ch, reference_path)
     
-    mapResults = bowtie2map_singularity(params.inputSingle, reference_path) 
+    mapResults = bowtie2map(fastq_ch, reference_path) 
     
     mapResults.view { "Bowtie2 Results: ${it}" }
     
@@ -240,17 +189,9 @@ workflow {
     
     indexedBam = indexBam(sortedBam)
     
-    myVCF = makeVCF(sortedBam, reference_path)   
-    
-    myVCF.view { "SNP calls: ${it}" }
-    
-    myVCFz = zipVCF(myVCF)
-
-    myVCFcsi = csiVCF(myVCFz)
-
-    fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
-
-    fasta.view { "Consensus FASTA: ${it}" }
-
     bedGr = makeGenomeCov(sortedBam, reference_path)
+
+    bedGr.view { "Coverage Plot: ${it}" }
+
+    callPerl(bedGr).view()   
 }

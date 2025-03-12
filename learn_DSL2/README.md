@@ -1,31 +1,19 @@
-### Running test pipeline, script4.nf
+## How to map test single-end reads to test reference
+### Vignette 1: HPC Cluster installation in nextflowViral folder
 
-`module load nextflow/24.04.2`
-
-`nextflow run learn_DSL2/script4.nf`
-
-### Running the Nextflow and Bowtie test pipeline:
-
-`module load nextflow/24.04.2`
+`module load python/3.12.3`
 
 `module load bowtie2/2.3.5.1`
 
-`nextflow run learn_DSL2/map_bowtie_or_bwa.nf --reference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1" --inputPair "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R{1,2}_001.fastq.gz"`
-
-### Running the Nextflow, Bowtie, Samtools, and Bcftools test pipeline:
-
-`module load nextflow/24.04.2`
-
 `module load samtools/1.9`
 
-`module load bcftools/1.9`
-
-`nextflow run learn_DSL2/map_bowtie_to_vcf.nf --reference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"`
-
-### Coming Soon: Singularity Bowtie2
+`module load bedtools/2.27.1`
 
 `module load nextflow/24.04.2`
 
-`python Singularity/get_bowtie2.py`
+`cd learn_DSL2/`
 
-`nextflow run learn_DSL2/map_bowtie_or_bwa.nf --reference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"`
+`nextflow run mapSingle_bowtie_to_plot_coverage.nf --reference "$PWD/../bowtieConsensTestFiles/adenovirus_B3/OR777202.1" --inputSingle "$PWD/../bowtieConsensTestFiles/adenovirus_B3/Pool-1_S1_adenovirus_B3_001.fastq.gz" --intermediate "$PWD/intermediate/"`
+
+### Coming Soon: Vignette 2, Singularity containerized installation
+

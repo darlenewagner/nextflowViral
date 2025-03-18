@@ -3,7 +3,7 @@ This set of pipelines represents a viral genomic SNPs and consensus computing ut
 
 ### Vignette 1: Install prereqs for running local HPC Cluster consensusFromPairedFastq.nf
 
-```module load nextflow/24.04.2````
+```module load nextflow/24.04.2```
 
 ```module load bowtie2/2.3.5.1```
 

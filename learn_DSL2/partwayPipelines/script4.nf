@@ -5,11 +5,11 @@ nextflow.enable.dsl=2
 // Counts reads in paired fastq.gz file
 
 params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
-params.outdir = "${baseDir}/learn_DSL2/local_output/"
+params.outdir = "${baseDir}/../../output/"
 
 process READCOUNT {
 
-    publishDir "${baseDir}/learn_DSL2/local_output/", mode: 'copy'
+    publishDir "${baseDir}/../../output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path(reads)

@@ -1,6 +1,6 @@
 #Ignore these directories:
 bowtieConsensTestFiles/
-expBowtieConsensTestFiles/
+???BowtieConsensTestFiles/
 output/
 intermediate/
 prevOutput/

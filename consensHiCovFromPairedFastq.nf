@@ -283,7 +283,7 @@ workflow {
     
    //  mapResults = bowtie2map(read_pairs_ch, reference_path)
     
-    mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
+    mapResults = bowtie2map(read_pairs_ch, reference_path) 
     
     mapResults.view { "Bowtie2 Results: ${it}" }
     

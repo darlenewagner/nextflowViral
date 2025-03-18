@@ -60,10 +60,12 @@ while(<COVERAGE>)
       {
 	  push @Regions, $F[1];
 	  $prevCoverage = $coverage;
+	  #$sum = $sum + $coverage;
 	  $count++;
       }
     else
       {
+	  #$sum = $sum + $coverage;
           $prevCoverage = $coverage;
       }
  }

@@ -1,10 +1,16 @@
 # nextflowViral
-In the nextflowViral package, the pipeline script, ***bowtieConsensHiCovFromPairedFastq.nf***, is written in Nextflow DSL 1 and is thus out-of-date. It generates consensus genomes from paired fastq files mapped to reference at minimum 1X and 25X coverage.  To run old_DSL1 files, Nextflow 21.04.3 is required.  To run the new pipelines compatible with DSL 2 (under learn_DSL2), Nextflow 23.10.0 and above is required.  For setup, Python 3.9.1 and above is required.
+This set of pipelines represents a viral genomic SNPs and consensus computing utility with a minimum number of software dependencies compared to comparable tools.
 
-### Running bowtieConsensusFromPairedFastq.nf
-To run using input parameters in ***nextflow.config***, simply type the following after installation:
+### Running local HPC Cluster consensusFromPairedFastq.nf
 
-```nextflow run bowtieConsensHiCovFromPairedFastq.nf```
+
+```nextflow run consensHiCovFromPairedFastq.nf --reference "$PWD/bowtieConsensTestFiles/EnterovirusD70/MT081369_JPN_1989-23292" --inputPair "$PWD/bowtieConsensTestFiles/EnterovirusD70/EnterovirusD70_SRR13402413_R{1,2}_001.fastq.gz"```
+
+After successful run, folder *output/* should contain *EnterovirusD70_SRR13402413_Rb.bedGraph*, *\*.bedGraph.FiveX*, *\*.fasta*, *\*.fiveX.fasta*, *\*.snp.tsv*, *\*.vcf*, *\*.vcf.gz*, and **\.vcf.gz.csi*. 
+
+To run without parameters, be prepared to update parameters, inputPair and reference, in ***nextflow.config***.
+
+
 
 To run using custom parameters for *--querydir* and *--reference*, for example, the folder, *my_paired_fastq/*, and the reference basename, *my_reference/my_genome*, type:
 

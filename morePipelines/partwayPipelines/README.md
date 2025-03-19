@@ -16,11 +16,11 @@ In parent directory:
 
 ```nextflow run script4.nf```
 
-To see the result, look in ../../output/ for the file, .
+To see the result, look in *../../output/* for the file, *polio-sample-8_S13_R.readcounts.txt*.
 
-To change inputPairs parameter, edit nextflow.config in the current folder, morePipelines/partwayPipelines/
+To change inputPairs parameter, edit *nextflow.config* in the current folder, *morePipelines/partwayPipelines/*.
 
-Alternatively, provide an input path as an argument to script4.nf as shown:
+Alternatively, provide an input path as an argument to *script4.nf* as shown:
 
 ```nextflow run script4.nf --inputPair "$PWD/../../myViralReads/virus_sample_X_R{1,2}_001.fastq.gz"```
 

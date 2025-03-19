@@ -10,8 +10,8 @@ params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/
 reference_name = file(params.reference).name
 reference_path = file(params.reference).parent
 
-params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
-params.output = "${baseDir}/../output/"
+params.inputPair = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/polio-sample-8_S13_R{1,2}_001.fastq.gz"
+params.output = "${baseDir}/../../output/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -91,7 +91,7 @@ workflow {
     
    //  mapResults = bowtie2map(read_pairs_ch, reference_path)
 
-   mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
+   mapResults = bowtie2map(read_pairs_ch, reference_path) 
 
    mapResults.view { "Bowtie2 Results: ${it}" }
 

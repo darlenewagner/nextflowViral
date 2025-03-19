@@ -1,10 +1,10 @@
-#! /apps/x86_64/nextflow/23.10.0 nextflow
+#! /apps/x86_64/nextflow/24.04.2 nextflow
 
 nextflow.enable.dsl=2
 
 // Counts reads in paired fastq.gz file
 
-params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
+params.inputPair = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/polio-sample-8_S13_R{1,2}_001.fastq.gz"
 params.outdir = "${baseDir}/../../output/"
 
 process READCOUNT {
@@ -15,7 +15,7 @@ process READCOUNT {
     tuple val(sample_name), path(reads)
 
     output:
-    path "${sample_name}.readcounts.txt"
+    tuple val(sample_name), path("${sample_name}.readcounts.txt")
 
     script:
     """
@@ -30,6 +30,8 @@ workflow {
         .fromFilePairs(params.inputPair, checkIfExists: true)
         .set { read_pairs_ch }
 
-    READCOUNT(read_pairs_ch)
+    see = READCOUNT(read_pairs_ch)
+
+    see.view {"Read counts: ${it}"}
 
 }

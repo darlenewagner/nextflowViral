@@ -3,10 +3,10 @@
 nextflow.enable.dsl=2
 
 /* Usage
-     nextflow run word_count.nf --reference <fasta file> --inputPair <paired fastq files>
+     nextflow run map_bowtie_or_bwa.nf --reference <indexed reference ID> --inputPair <paired fastq files>
  */
 
-params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+params.reference = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name
 reference_path = file(params.reference).parent
 
@@ -46,7 +46,7 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map {
 
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/../../output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path(reads)
@@ -64,7 +64,7 @@ process bowtie2map {
 
 process bowtie2map_singularity {
 
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/../../output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path(reads)
@@ -75,7 +75,7 @@ process bowtie2map_singularity {
 
     script:
     """
-    singularity exec "${baseDir}/../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+    singularity exec "${baseDir}/../../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
     """
 }
 

@@ -4,24 +4,25 @@ nextflow.enable.dsl=2
 
 // Counts reads in unpaired fastq file
 
-params.inputSingle = "${baseDir}/../bowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq"
-params.outdir = "${baseDir}/learn_DSL2/local_output/"
+params.inputSingle = "${baseDir}/../../bowtieConsensTestFiles/adenovirus_B3/Pool-1_S1_adenovirus_B3_001.fastq.gz"
+params.outdir = "${baseDir}/../../output/"
 
 process READCOUNT {
 
-    publishDir "${baseDir}/learn_DSL2/local_output/", mode: 'copy'
+    publishDir "${baseDir}/../../output/", mode: 'copy'
+
+    //tag "$sample.name"
 
     input:
-    path(sample_name)
+    path sample_name
 
     output:
-    path "${sample_name}.readcounts.txt"
-    
+    tuple val(sample_name), path("${sample_name.simpleName}.readcounts.txt")
     
     script:
     """
-    echo ${sample_name} > ${sample_name}.readcounts.txt
-    cat ${sample_name} | awk 'END {print NR/4}' >> ${sample_name}.readcounts.txt
+    echo ${sample_name} > ${sample_name.simpleName}.readcounts.txt
+    zcat ${sample_name} | awk 'END {print NR/4}' >> ${sample_name.simpleName}.readcounts.txt
     """
 }
 
@@ -30,6 +31,8 @@ workflow {
         .fromPath(params.inputSingle, checkIfExists: true)
         .set { fastq_ch }
 
-    READCOUNT(fastq_ch)
+   see = READCOUNT(fastq_ch)
 
+   see.view { "Read counts: {$it}" }
+   
 }

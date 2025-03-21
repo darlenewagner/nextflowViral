@@ -84,6 +84,7 @@ logger.info("Begin Singularity build of perl v5.32 and samtools v1.9")
 check_website("https://depot.galaxyproject.org/singularity/perl:5.32")
 
 perl_sif = 'my_perl5.32.sif'
+
 try:
     with open(perl_sif, 'r+'):
         print("{} already built.".format(perl_sif))
@@ -92,7 +93,7 @@ except:
 
 #os.system("singularity pull https://depot.galaxyproject.org/singularity/perl:5.32")
 
-logger.info("Building image from https://depot.galaxyproject.org/singularity/perl:5.32")
+logger.info("Built image from https://depot.galaxyproject.org/singularity/perl:5.32")
 
 #os.system("singularity build my_perl5.32.sif perl:5.32")
 
@@ -100,14 +101,34 @@ time.sleep(1)
 
 check_website("https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8")
 
-os.system("singularity pull https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8")
+samtools_sif = 'samtools1.9.sif';
 
-logger.info("Building image from https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8")
+try:
+    with open(samtools_sif, 'r+'):
+        print("{} already built.".format(samtools_sif))
+except:
+    pull_singularity_image("https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8", samtools_sif)
 
-os.system("singularity build my_samtools.sif samtools:1.9--h91753b0_8")
 
-check_website("https://depot.galaxyproject.org/singularity/pbgzip:2016.08.04--he4cf2ce_0")
+#os.system("singularity pull https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8")
+logger.info("Built image from https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8")
+#os.system("singularity build my_samtools.sif samtools:1.9--h91753b0_8")
 
+time.sleep(1)
+
+check_website("https://depot.galaxyproject.org/singularity/htslib:1.19.1--h81da01d_2")
+
+pbgzip_sif = 'htslib1.19.1.sif';
+
+try:
+    with open(pbgzip_sif, 'r+'):
+        print("{} already built.".format(samtools_sif))
+except:
+    pull_singularity_image("https://depot.galaxyproject.org/singularity/htslib:1.19.1--h81da01d_2", pbgzip_sif)
+
+time.sleep(1)
+
+logger.info("Built image from https://depot.galaxyproject.org/singularity/htslib:1.19.1--h81da01d_2")
 
 
 

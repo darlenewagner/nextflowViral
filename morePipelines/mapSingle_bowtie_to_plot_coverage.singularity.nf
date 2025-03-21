@@ -42,9 +42,13 @@ process LOOKSY  // for debugging and sanity checking
   }
 
 
-process bowtie2map {
+process bowtie2map_singularity {
 
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/bowtie2:2.5.4--he96a11b_5' :
+    'quay.io/biocontainers/bowtie2:2.5.4--he96a11b_5' }"
+    
+    publishDir "${baseDir}/../intermediate/", mode: 'copy'
     
     input:
     path(sample_name)
@@ -60,29 +64,13 @@ process bowtie2map {
 }
 
 
-process bowtie2map_singularity {
+process sam2bam_singularity {
 
-    tag { sample }
-    
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8' :
+    'quay.io/biocontainers/samtools:1.9--h91753b0_8' }"
+
     publishDir "${baseDir}/../intermediate/", mode: 'copy'
-    
-    input:
-    path(sample_name)
-    path reference 
-    
-    output:
-    tuple val(sample_name.baseName), path("${sample_name.baseName}.sam")    
-       
-    script:
-    """
-    singularity exec "${baseDir}/../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name.baseName}.sam"
-    """
-}
-
-
-process sam2bam {
-
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
@@ -97,11 +85,11 @@ process sam2bam {
 
 }
 
-//process sam2bam_singularity {
+process sortBam_singularity {
 
-//}
-
-process sortBam {
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8' :
+    'quay.io/biocontainers/samtools:1.9--h91753b0_8' }"
 
     publishDir "${baseDir}/../intermediate/", mode: 'copy'
 
@@ -118,13 +106,12 @@ process sortBam {
 }
 
 
-//process sortBam_singularity {
-
-//}
-
-
-process indexBam {
+process indexBam_singularity {
     
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8' :
+    'quay.io/biocontainers/samtools:1.9--h91753b0_8' }"
+
     publishDir "${baseDir}/../intermediate/", mode: 'copy'
     
     input:
@@ -140,12 +127,11 @@ process indexBam {
 
 }
 
-//process indexBam_singularity {
+process makeGenomeCov_singularity {
 
-//}
-
-
-process makeGenomeCov {
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/bedtools:2.27.1--he941832_2' :
+    'quay.io/biocontainers/bedtools:2.27.1--he941832_2' }"   
 
    publishDir "${baseDir}/../output/", mode: 'copy'
    
@@ -189,21 +175,17 @@ workflow {
         .set { fastq_ch }
    
    
-   // LOOKSY(fastq_ch, params.reference) | view
-    
-   //  mapResults = bowtie2map(fastq_ch, reference_path)
-    
-    mapResults = bowtie2map(fastq_ch, reference_path) 
+    mapResults = bowtie2map_singularity(fastq_ch, reference_path) 
     
     mapResults.view { "Bowtie2 Results: ${it}" }
     
-    bamResults = sam2bam(mapResults)
+    bamResults = sam2bam_singularity(mapResults)
     
-    sortedBam = sortBam(bamResults)
+    sortedBam = sortBam_singularity(bamResults)
     
-    indexedBam = indexBam(sortedBam)
+    indexedBam = indexBam_singularity(sortedBam)
     
-    bedGr = makeGenomeCov(sortedBam, reference_path)
+    bedGr = makeGenomeCov_singularity(sortedBam, reference_path)
 
     bedGr.view { "Coverage Plot: ${it}" }
 

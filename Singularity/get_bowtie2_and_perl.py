@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-## Calls Singularity to install bowtie2 as user-defined input or default bowtie2:2.5.1
-## Also installs perl:5.32 and samtools:1.9
+## Calls Singularity to install local bowtie2 as user-defined input or default bowtie2:2.5.1
+## Also installs local perl:5.32, local samtools:1.9, and local pbgzip:2016.08.04
 
 import sys, os, os.path, argparse, re, string, logging, warnings, time
 import pathlib
@@ -62,19 +62,18 @@ time.sleep(1)
 #os.system("singularity pull {}".format(args.input))
 bowtie_sif = 'my_bowtie2.sif'
 
-pull_singularity_image("https://depot.galaxyproject.org/singularity/bowtie2:2.5.1--py39h6fed5c7_1", bowtie_sif)
+try:
+    with open(bowtie_sif, 'r+'):
+        print("{} already built.".format(bowtie_sif))
+except:
+    pull_singularity_image("https://depot.galaxyproject.org/singularity/bowtie2:2.5.1--py39h6fed5c7_1", bowtie_sif)
 
-time.sleep(1)
+time.sleep(1)        
 
-findContainer = args.input.split('/')
-
-cont = len(findContainer)
-
-logger.info("Build image from {}".format(findContainer[cont - 1]))
-
+#findContainer = args.input.split('/')
+#cont = len(findContainer)
+#logger.info("Built image from {}".format(findContainer[cont - 1]))
 #os.system("singularity build my_bowtie2.sif {}".format(findContainer[cont - 1]))
-
-time.sleep(1)
 
 logger.info("Successful build of bowtie2.sif")
 
@@ -84,11 +83,18 @@ logger.info("Begin Singularity build of perl v5.32 and samtools v1.9")
 
 check_website("https://depot.galaxyproject.org/singularity/perl:5.32")
 
-os.system("singularity pull https://depot.galaxyproject.org/singularity/perl:5.32")
+perl_sif = 'my_perl5.32.sif'
+try:
+    with open(perl_sif, 'r+'):
+        print("{} already built.".format(perl_sif))
+except:
+    pull_singularity_image("https://depot.galaxyproject.org/singularity/perl:5.32", perl_sif)
+
+#os.system("singularity pull https://depot.galaxyproject.org/singularity/perl:5.32")
 
 logger.info("Building image from https://depot.galaxyproject.org/singularity/perl:5.32")
 
-os.system("singularity build my_perl5.32.sif perl:5.32")
+#os.system("singularity build my_perl5.32.sif perl:5.32")
 
 time.sleep(1)
 
@@ -100,7 +106,7 @@ logger.info("Building image from https://depot.galaxyproject.org/singularity/sam
 
 os.system("singularity build my_samtools.sif samtools:1.9--h91753b0_8")
 
-
+check_website("https://depot.galaxyproject.org/singularity/pbgzip:2016.08.04--he4cf2ce_0")
 
 
 

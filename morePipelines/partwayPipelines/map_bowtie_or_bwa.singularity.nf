@@ -4,7 +4,9 @@ nextflow.enable.dsl=2
 
 /* Usage
      nextflow run map_bowtie_or_bwa.nf --reference <indexed reference ID> --inputPair <paired fastq files>
- */
+
+     Requires locally-built bowtie2 Singularity container, my_bowtie2.sif, in main folder of nextflowViral/
+*/
 
 params.reference = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name
@@ -46,10 +48,6 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map_singularity {
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'https://depot.galaxyproject.org/singularity/bowtie2:2.5.4--he96a11b_5' :
-    'quay.io/biocontainers/bowtie2:2.5.4--he96a11b_5' }"
-
     publishDir "${baseDir}/../../output/", mode: 'copy'
     
     input:
@@ -61,10 +59,9 @@ process bowtie2map_singularity {
 
     script:
     """
-    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+    singularity exec "${baseDir}/../../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
     """
 }
-
 
 
 workflow {
@@ -76,8 +73,6 @@ workflow {
 
    // LOOKSY(read_pairs_ch, params.reference) | view
     
-   //  mapResults = bowtie2map(read_pairs_ch, reference_path)
-
    mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
 
    mapResults.view { "Bowtie2 Results: ${it}" }

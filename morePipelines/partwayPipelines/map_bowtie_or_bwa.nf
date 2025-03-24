@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 
 /* Usage
      nextflow run map_bowtie_or_bwa.nf --reference <indexed reference ID> --inputPair <paired fastq files>
- */
+*/
 
 params.reference = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name

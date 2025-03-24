@@ -51,11 +51,11 @@ process bowtie2map {
     path reference 
 
     output:
-    tuple val(sample_name.baseName), path("${sample_name.baseName}.sam")    
+    tuple val(sample_name.baseName), path("${sample_name.baseName}.single.sam")    
 
     script:
     """
-    bowtie2 --no-unal -x "${reference}"/"${reference_name}" -U "${sample_name}" -S "${sample_name.baseName}.sam"
+    bowtie2 --no-unal -x "${reference}"/"${reference_name}" -U "${sample_name}" -S "${sample_name.baseName}.single.sam"
     """
 }
 
@@ -71,11 +71,11 @@ process bowtie2map_singularity {
     path reference 
     
     output:
-    tuple val(sample_name.baseName), path("${sample_name.baseName}.sam")    
+    tuple val(sample_name.baseName), path("${sample_name.baseName}.single.sam")    
        
     script:
     """
-    singularity exec "${baseDir}/../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name.baseName}.sam"
+    singularity exec "${baseDir}/../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name.baseName}.single.sam"
     """
 }
 

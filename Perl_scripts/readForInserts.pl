@@ -2,6 +2,8 @@
 use strict;
 my $sam = $ARGV[0];
 
+$sam !~ /\.single\.sam/ || die "Paired-end reads mapping required for inserts calculation$!";
+
 open(SAM, $sam) || die "Can't find .sam file, $sam $!";
 
 my $count = 0;
@@ -17,4 +19,6 @@ while(<SAM>)
     }
 }
 
-printf("%.2f\n", $sum/$count)
+printf("%.2f\n", $sum/$count);
+
+close(SAM);

@@ -1,4 +1,4 @@
-#!/apps/x86_64/perl/perl-5.16.1-MT/bin/perl
+#!/usr/bin/perl
 ## a wrapper script for output of bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n' sample.vcf.gz
 ## Reads tabulated data from STDIN and uses a command-line argument for screening out low-coverage SNPs
 use strict;

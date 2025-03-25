@@ -281,8 +281,8 @@ process maskWithNs_singularity {
 process queryVCF_singularity {
 
    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-   'https://depot.galaxyproject.org/singularity/bcftools:1.9--ha228f0b_4' :
-   'quay.io/biocontainers/bcftools:1.9--ha228f0b_4' }"
+   'https://depot.galaxyproject.org/singularity/bcftools:1.9--h47928c2_1' :
+   'quay.io/biocontainers/bcftools:1.9--h47928c2_1' }"
    
    publishDir "${baseDir}/output/", mode: 'copy'
    
@@ -290,12 +290,14 @@ process queryVCF_singularity {
    tuple val(sample_name), path("${sample_name}.vcf.gz")
    
    output:
-   tuple val(sample_name), path("${sample_name}.snp.tsv")
+   stdout
+//   tuple val(sample_name), path("${sample_name}.snp.tsv")
    
    script:
    """
-   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
+   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz 
    """
+ //   | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
 }
 
 
@@ -335,6 +337,7 @@ workflow {
 
     fastaN = maskWithNs_singularity(bed5X, fasta)
 
-    SNPs = queryVCF_singularity(myVCFz)
-    
+    //SNPs = queryVCF_singularity(myVCFz)
+
+    queryVCF_singularity(myVCFz).view()
 }

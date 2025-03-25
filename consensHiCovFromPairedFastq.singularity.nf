@@ -290,15 +290,34 @@ process queryVCF_singularity {
    tuple val(sample_name), path("${sample_name}.vcf.gz")
    
    output:
-   stdout
-//   tuple val(sample_name), path("${sample_name}.snp.tsv")
+ //  stdout
+   tuple val(sample_name), path("${sample_name}.messy.snp.tsv")
+     
    
    script:
    """
-   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz 
+   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz -o "${sample_name}".messy.snp.tsv
    """
  //   | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
 }
+
+
+process callPerl {
+
+   publishDir "${baseDir}/output/", mode: 'copy'
+
+   input:
+   tuple val(sample_name), path("${sample_name}.messy.snp.tsv")
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.snp.tsv")
+
+   script:
+   """
+   cat "${sample_name}".messy.snp.tsv | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
+   """
+}
+
 
 
 workflow {
@@ -337,7 +356,9 @@ workflow {
 
     fastaN = maskWithNs_singularity(bed5X, fasta)
 
-    //SNPs = queryVCF_singularity(myVCFz)
+    SNPs = queryVCF_singularity(myVCFz)
 
-    queryVCF_singularity(myVCFz).view()
+    filtered = callPerl(SNPs)
+
+    //queryVCF_singularity(myVCFz).view()
 }

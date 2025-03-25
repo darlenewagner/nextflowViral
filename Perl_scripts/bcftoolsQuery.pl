@@ -15,11 +15,14 @@ print "Ref_ID\tPosition\tRef\tAlt\tQual\tCoverage\tFraction\n";
 
 while(<STDIN>)
 {
-    my @F = split(/\s+/, $_);
-    my @half = split(/,/, $F[5]);
-    if($F[6] >= $coverage) {
-	printf "%\s\t%\d\t%\s\t%\s\t%\d\t%\d\t%0.4f\n", $F[0], $F[1], $F[2], $F[3], $F[4], $F[6], $half[1]/$F[6];
-    }
+    #if($_ !~ /WARN/)
+    #{
+      my @F = split(/\s+/, $_);
+      my @half = split(/,/, $F[5]);
+      if($F[6] >= $coverage) {
+  	  printf "%\s\t%\d\t%\s\t%\s\t%\d\t%\d\t%0.4f\n", $F[0], $F[1], $F[2], $F[3], $F[4], $F[6], $half[1]/$F[6];
+      }
+    #}
 }
 
 

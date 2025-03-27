@@ -13,7 +13,7 @@ reference_name = file(params.reference).name
 reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
-params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio-sample-2_S7_R{1,2}_001.fastq.gz"
+params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio-sample-8_S13_R{1,2}_001.fastq.gz"
 params.output = "${baseDir}/output/"
 
 process LOOKSY  // for debugging and sanity checking

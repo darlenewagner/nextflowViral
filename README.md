@@ -9,7 +9,7 @@ This set of pipelines represents a viral genomic SNPs and consensus computing ut
 
 `module load nextflow/24.04.2`
 
-`nextflow run prepReferenceOnly.singularity.nf --makeReference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1.fasta" --indexdir "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/"`
+`nextflow run prepReferenceOnly.singularity.nf --makeReference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1.fasta" --indexDir "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/"`
 
 ##### Running main pipeline with default inputs from *$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/*
 

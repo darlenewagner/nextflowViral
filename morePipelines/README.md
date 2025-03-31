@@ -1,6 +1,6 @@
 ## How to map test single-end reads to test reference
 
-### Vignette 2: Singularity containerized installation and run
+### Vignette 1: Singularity containerized installation and run
 
 #### In *nextflowViral/* home folder:
 

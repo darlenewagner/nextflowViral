@@ -1,5 +1,5 @@
 # nextflowViral
-This set of pipelines represents a viral genomic SNPs and consensus computing utility with a minimum number of software dependencies compared to comparable tools.
+This set of pipelines represents a viral genomic SNPs and consensus computing utility with a minimum number of software dependencies compared to comparable tools. The *nextflowViral* pipelines also leverage Singularity for enhanced portability.
 
 ### Vignette 1: Install and run from LINUX/UNIX using Singularity and Nextflow only - *Recommended Method*
 

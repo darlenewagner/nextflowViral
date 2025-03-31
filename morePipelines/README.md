@@ -32,7 +32,7 @@ Final line of output to screen:
 
 `python Python_scripts/prepReferenceOnly.py bowtieConsensTestFiles/adenovirus_B3/`
 
-`cd learn_DSL2/`
+`cd morePipelines/`
 
 `nextflow run mapSingle_bowtie_to_plot_coverage.nf --reference "$PWD/../bowtieConsensTestFiles/adenovirus_B3/OR777202.1" --inputSingle "$PWD/../bowtieConsensTestFiles/adenovirus_B3/Pool-1_S1_adenovirus_B3_001.fastq.gz" --intermediate "$PWD/intermediate/"`
 

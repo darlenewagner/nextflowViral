@@ -1,5 +1,22 @@
 ## How to map test single-end reads to test reference
-### Vignette 1: HPC Cluster installation in nextflowViral folder
+
+### Vignette 2: Singularity containerized installation and run
+
+#### In *nextflowViral/* home folder:
+
+`nextflow run prepReferenceOnly.singularity.nf --makeReference "$PWD/bowtieConsensTestFiles/adenovirus_B3/OR777202.1.fasta" --indexdir "$PWD/bowtieConsensTestFiles/adenovirus_B3/"`
+
+`cd morePipelines/`
+
+#### In *morePipelines/*
+
+`nextflow run mapSingle_bowtie_to_plot_coverage.singularity.nf --reference "$PWD/../bowtieConsensTestFiles/adenovirus_B3/OR777202.1" --inputSingle "$PWD/../bowtieConsensTestFiles/adenovirus_B3/Pool-1_S1_adenovirus_B3_001.fastq.gz" --intermediate "$PWD/../intermediate/" --output "$PWD/../outdir/"`
+
+Final line of output to screen:
+*OR777202.1      Avg. Depth: 111.8       Max. Breadth: 81.9%*
+
+
+### Vignette 2: HPC Cluster installation in nextflowViral folder
 
 `module load python/3.12.3`
 
@@ -19,7 +36,5 @@
 
 `nextflow run mapSingle_bowtie_to_plot_coverage.nf --reference "$PWD/../bowtieConsensTestFiles/adenovirus_B3/OR777202.1" --inputSingle "$PWD/../bowtieConsensTestFiles/adenovirus_B3/Pool-1_S1_adenovirus_B3_001.fastq.gz" --intermediate "$PWD/intermediate/"`
 
----
 
-### Coming Soon: Vignette 2, Singularity containerized installation
 

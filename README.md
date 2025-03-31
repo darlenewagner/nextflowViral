@@ -11,8 +11,13 @@ This set of pipelines represents a viral genomic SNPs and consensus computing ut
 
 `nextflow run prepReferenceOnly.singularity.nf --makeReference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1.fasta" --indexdir "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/"`
 
-``
+##### Running main pipeline with default inputs from *$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/*
 
+`nextflow run consensHiCovFromPairedFastq.singularity.nf`
+
+After successful run, folder *output/* should contain *polio-sample-8_S13_R.bedGraph*, *\*.bedGraph.FiveX*, *\*.fasta*, *\*.fiveX.fasta*, *\*.snp.tsv*, *\*.vcf*, *\*.vcf.gz*, and **\.vcf.gz.csi*. The file, *polio-sample-8_S13_R.snp.tsv*, should contain 1 SNP position.
+
+##### Additional use cases for *consensHiCovFromPairedFastq.singularity.nf* coming soon
 
 
 #### Vignette 1b: Installation of singularity, nexflow, or both through Miniconda - *Coming Soon*

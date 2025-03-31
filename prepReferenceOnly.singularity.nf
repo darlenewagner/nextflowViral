@@ -17,7 +17,7 @@ process buildBowtie2Index {
     'https://depot.galaxyproject.org/singularity/bowtie2:2.5.4--he96a11b_5' :
     'quay.io/biocontainers/bowtie2:2.5.4--he96a11b_5' }"
 
-    publishDir "${params.indexdir}", mode: 'copy'
+    publishDir "${params.indexDir}", mode: 'copy'
 
     input:
     tuple val(fasta), path(fasta_file)

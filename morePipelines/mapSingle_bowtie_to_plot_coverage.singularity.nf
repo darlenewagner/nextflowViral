@@ -11,7 +11,7 @@ reference_name = file(params.reference).name
 reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
-params.inputSingle = "${baseDir}/../expBowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq"
+params.inputSingle = "${baseDir}/../expBowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq.gz"
 inputSingle_path = file(params.inputSingle).parent
 params.output = "${baseDir}/output/"
 params.intermediate = "${baseDir}/intermediate/"

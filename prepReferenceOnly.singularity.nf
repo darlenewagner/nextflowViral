@@ -3,11 +3,11 @@
 nextflow.enable.dsl=2
 
 /* Usage
-     nextflow run prepReferenceOnly.singularity.nf --reference <fasta file>
+     nextflow run prepReferenceOnly.singularity.nf --makeReference <fasta file> --indexdir <destination folder>
      Web-connection-dependent Singularity containerization which calls bowtie2 and samtools
 */
 
-params.makeReference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+params.makeReference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1.fasta"
 params.indexdir = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/"
 reference_path = file(params.makeReference).parent
 
@@ -23,7 +23,7 @@ process buildBowtie2Index {
     tuple val(fasta), path(fasta_file)
 
     """
-    bowtie2-build "${reference_path}"/"${fasta_file}.fasta" "${reference_path}"/"${fasta}"
+    bowtie2-build "${reference_path}"/"${fasta_file}" "${reference_path}"/"${fasta}"
     """
 }
 

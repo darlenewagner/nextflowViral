@@ -3,6 +3,19 @@ This set of pipelines represents a viral genomic SNPs and consensus computing ut
 
 ### Vignette 1: Install and run from LINUX/UNIX using Singularity and Nextflow only - *Recommended Method*
 
+#### Vignette 1a: When singularity is already installed and nextflow can be installed from the local HPC Cluster
+
+`tar xvfz bowtieConsensTestFiles.tar.gz`
+
+`module load nextflow/24.04.2`
+
+`nextflow run prepReferenceOnly.singularity.nf --makeReference "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1.fasta" --indexdir "$PWD/bowtieConsensTestFiles/eng_live_atten_poliovirus/"`
+
+``
+
+
+
+#### Vignette 1b: Installation of singularity, nexflow, or both through Miniconda - *Coming Soon*
 
 
 ### Vignette 2: Install prereqs for running local HPC Cluster consensusFromPairedFastq.nf

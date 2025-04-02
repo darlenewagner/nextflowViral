@@ -3,10 +3,14 @@
 nextflow.enable.dsl=2
 
 /* Usage
-     nextflow run consensHiCovFromPairedFastq.singularity.nf --reference <fasta file> --inputPair <paired fastq files>
+     Preferred: nextflow run consensHiCovFromPairedFastq.singularity.nf --reference <fasta file> --inputPair <paired fastq files>
+     - For web-connection-dependent Singularity containerization which calls required container separately within each process definition
      
-     Web-connection-dependent Singularity containerization which calls required container separately within each process definition
+     Expert: nextflow run consensHiCovFromPairedFastq.singularity.nf --local --reference <fasta file> --inputPair <paired fastq files>
+     - Use flag '--local' to run without pulling and building from Singularity, only recommended when prerequisite programs are available locally
  */
+
+params.local = false 
 
 params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name

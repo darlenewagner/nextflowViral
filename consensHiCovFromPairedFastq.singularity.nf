@@ -56,7 +56,8 @@ process bowtie2map_singularity {
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
     'https://depot.galaxyproject.org/singularity/bowtie2:2.5.4--he96a11b_5' :
     'quay.io/biocontainers/bowtie2:2.5.4--he96a11b_5' }"
-    
+
+
     publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
@@ -71,6 +72,24 @@ process bowtie2map_singularity {
     bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
     """
 }
+
+process bowtie2map_local {
+
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path(reads)
+    path reference 
+
+    output:
+    tuple val(sample_name), path("${sample_name}.sam")    
+
+    script:
+    """
+    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+    """
+}
+
 
 
 process sam2bam_singularity {
@@ -332,7 +351,14 @@ workflow {
       
    // LOOKSY(read_pairs_ch, params.reference) | view
     
-    mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
+    if(local)
+       {
+         mapResults = bowtie2map_local(read_pairs_ch, reference_path) 
+       }
+      else
+      {
+        mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
+      }
     
     mapResults.view { "Bowtie2 Results: ${it}" }
     

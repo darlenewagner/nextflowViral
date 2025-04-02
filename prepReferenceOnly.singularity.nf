@@ -27,6 +27,27 @@ process buildBowtie2Index {
     """
 }
 
+process samtoolsFaidx {
+
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8' :
+    'quay.io/biocontainers/samtools:1.9--h91753b0_8' }"
+
+    
+    publishDir "${params.indexDir}", mode: 'copy'
+
+    input:
+    tuple val(fasta), path(fasta_file)
+
+    output:
+    tuple val(fasta), path("${fasta_file}.fai")    
+
+    """
+    samtools faidx "${reference_path}"/"${fasta_file}" --fai-idx "${fasta_file}.fai"    
+    """
+
+}
+
 workflow {
 
 
@@ -35,5 +56,7 @@ workflow {
 	  .set { fasta_file }
 
      buildBowtie2Index( fasta_file )
-
+     
+     fai = samtoolsFaidx( fasta_file )
+     
   }

@@ -34,16 +34,19 @@ process samtoolsFaidx {
     'quay.io/biocontainers/samtools:1.9--h91753b0_8' }"
 
     
-    publishDir "${params.indexDir}", mode: 'copy'
+    publishDir "${reference_path}", mode: 'copy'
 
     input:
     tuple val(fasta), path(fasta_file)
 
     output:
-    tuple val(fasta), path("${fasta_file}.fai")    
+    stdout
+   // tuple val(fasta), path("${fasta_file}.fai")    
+   // tuple val(fasta), path("${fasta_file}.sizes")    
 
     """
-    samtools faidx "${reference_path}"/"${fasta_file}" --fai-idx "${fasta_file}.fai"    
+    samtools faidx "${reference_path}"/"${fasta_file}"
+    cut -f 1,2 "${reference_path}"/"${fasta_file}.fai"
     """
 
 }
@@ -57,6 +60,6 @@ workflow {
 
      buildBowtie2Index( fasta_file )
      
-     fai = samtoolsFaidx( fasta_file )
+     samtoolsFaidx( fasta_file ).collectFile( name: "${fasta_file}.sizes" ).view()
      
   }

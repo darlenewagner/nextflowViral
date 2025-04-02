@@ -351,7 +351,7 @@ workflow {
       
    // LOOKSY(read_pairs_ch, params.reference) | view
     
-    if(local)
+    if(params.local)
        {
          mapResults = bowtie2map_local(read_pairs_ch, reference_path) 
        }

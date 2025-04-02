@@ -40,13 +40,13 @@ process samtoolsFaidx {
     tuple val(fasta), path(fasta_file)
 
     output:
-    stdout
+    path "${fasta_file}.sizes"
    // tuple val(fasta), path("${fasta_file}.fai")    
    // tuple val(fasta), path("${fasta_file}.sizes")    
 
     """
     samtools faidx "${reference_path}"/"${fasta_file}"
-    cut -f 1,2 "${reference_path}"/"${fasta_file}.fai"
+    cut -f 1,2 "${reference_path}"/"${fasta_file}.fai" > "${fasta_file}.sizes"
     """
 
 }
@@ -60,6 +60,6 @@ workflow {
 
      buildBowtie2Index( fasta_file )
      
-     samtoolsFaidx( fasta_file ).collectFile( name: "${fasta_file}.sizes" ).view()
+     see = samtoolsFaidx( fasta_file )
      
   }

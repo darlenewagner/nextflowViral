@@ -51,6 +51,12 @@ process LOOKSY  // for debugging and sanity checking
   }
 
 
+// -- Singularity-Driven Processes --
+// REQUIREMENTS: Only 3 software packages.
+// Singularity version 1.4.0-1.el8 or higher
+// nextflow v24.04.2 or higher
+// Plus, your favorite version of perl
+
 process bowtie2map_singularity {
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -73,22 +79,6 @@ process bowtie2map_singularity {
     """
 }
 
-process bowtie2map_local {
-
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
-    
-    input:
-    tuple val(sample_name), path(reads)
-    path reference 
-
-    output:
-    tuple val(sample_name), path("${sample_name}.sam")    
-
-    script:
-    """
-    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
-    """
-}
 
 
 
@@ -340,6 +330,37 @@ process callPerl {
    cat "${sample_name}".messy.snp.tsv | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
    """
 }
+
+
+// -- Locally-Driven Processes --
+// WARNING: Must validate local installation of the following prerequisites/dependencies:
+// nextflow v24.04.2 or higher
+// bowtie2/2.3.5.1 or higher
+// samtools/1.9
+// bcftools/1.9
+// htslib/1.19.1 or higher
+// bedtools/2.27.1
+// seqtk/1.3
+// plus, your favorite version of perl
+
+
+process bowtie2map_local {
+
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path(reads)
+    path reference 
+
+    output:
+    tuple val(sample_name), path("${sample_name}.sam")    
+
+    script:
+    """
+    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+    """
+}
+
 
 
 

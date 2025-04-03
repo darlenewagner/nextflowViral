@@ -80,8 +80,6 @@ process bowtie2map_singularity {
 }
 
 
-
-
 process sam2bam_singularity {
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -361,6 +359,55 @@ process bowtie2map_local {
     """
 }
 
+process sam2bam_local {
+
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path("${sample_name}.sam")
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.bam")
+
+    script:
+    """
+    samtools view "${sample_name}".sam -o "${sample_name}".bam
+    """
+
+}
+
+process sortBam_local {
+
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
+
+    input:
+    tuple val(sample_name), path("${sample_name}.bam")
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.sorted.bam")
+    
+    script:
+    """
+    samtools sort "${sample_name}".bam -o "${sample_name}".sorted.bam
+    """
+}
+
+process indexBam_local {
+    
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path("${sample_name}.sorted.bam")
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.sorted.bam.bai")
+    
+    script:
+    """
+    samtools index -b "${sample_name}".sorted.bam "${sample_name}".sorted.bam.bai
+    """
+
+}
 
 
 
@@ -375,20 +422,21 @@ workflow {
     if(params.local)
        {
          mapResults = bowtie2map_local(read_pairs_ch, reference_path) 
+         mapResults.view { "Bowtie2 Results: ${it}" }
+         bamResults = sam2bam_local(mapResults)
+	 sortedBam = sortBam_local(bamResults)
+	 indexedBam = indexBam_local(sortedBam)
        }
       else
       {
-        mapResults = bowtie2map_singularity(read_pairs_ch, reference_path) 
+        mapResults = bowtie2map_singularity(read_pairs_ch, reference_path)
+        mapResults.view { "Bowtie2 Results: ${it}" }
+	bamResults = sam2bam_singularity(mapResults)
+        sortedBam = sortBam_singularity(bamResults)
+	indexedBam = indexBam_singularity(sortedBam)
       }
     
-    mapResults.view { "Bowtie2 Results: ${it}" }
-    
-    bamResults = sam2bam_singularity(mapResults)
-    
-    sortedBam = sortBam_singularity(bamResults)
-    
-    indexedBam = indexBam_singularity(sortedBam)
-    
+
     myVCF = makeVCF_singularity(sortedBam, reference_path)   
     
     myVCF.view { "SNP calls: ${it}" }

@@ -499,6 +499,60 @@ process makeGenomeCov_local {
    
  }
 
+process makeCoverageMask_local {
+   
+   publishDir "${baseDir}/output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.bedGraph")
+   //path reference
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
+
+   script:
+   """
+   awk '{ if (\$3 < 5) {print \$1"\t" \$2"\t" \$3"\t" "N" } else {print \$1"\t" \$2"\t" \$3"\t"}}' "${sample_name}".bedGraph > "${sample_name}".bedGraph.FiveX
+   """
+  
+}
+
+process maskWithNs_local {
+   
+   publishDir "${baseDir}/output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
+   tuple val(sample_name), path("${sample_name}.fasta")
+   
+   output:
+   tuple val(sample_name), path("${sample_name}.fiveX.fasta")
+      
+   script:
+   """
+   seqtk mutfa "${sample_name}".fasta "${sample_name}".bedGraph.FiveX > "${sample_name}".fiveX.fasta 
+   """
+}
+
+process queryVCF_local {
+
+   publishDir "${baseDir}/output/", mode: 'copy'
+   
+   input:
+   tuple val(sample_name), path("${sample_name}.vcf.gz")
+   
+   output:
+ //  stdout
+   tuple val(sample_name), path("${sample_name}.messy.snp.tsv")
+     
+   
+   script:
+   """
+   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz -o "${sample_name}".messy.snp.tsv
+   """
+ //   | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
+}
+
 
 
 workflow {
@@ -520,9 +574,12 @@ workflow {
          myVCF.view { "SNP calls: ${it}" }
          myVCFz = zipVCF_local(myVCF)
          myVCFcsi = csiVCF_local(myVCFz)
-         fasta = makeBcfConsensus_singularity(myVCFz, myVCFcsi, reference_path)
+         fasta = makeBcfConsensus_local(myVCFz, myVCFcsi, reference_path)
          fasta.view { "Consensus FASTA: ${it}" }
-         bedGr = makeGenomeCov_singularity(sortedBam, reference_path)
+         bedGr = makeGenomeCov_local(sortedBam, reference_path)
+         bed5X = makeCoverageMask_local(bedGr)
+         fastaN = maskWithNs_local(bed5X, fasta)
+         SNPs = queryVCF_local(myVCFz)
 
       }
       else
@@ -539,12 +596,11 @@ workflow {
          fasta = makeBcfConsensus_singularity(myVCFz, myVCFcsi, reference_path)
          fasta.view { "Consensus FASTA: ${it}" }
          bedGr = makeGenomeCov_singularity(sortedBam, reference_path)
+         bed5X = makeCoverageMask_singularity(bedGr)
+         fastaN = maskWithNs_singularity(bed5X, fasta)
+         SNPs = queryVCF_singularity(myVCFz)
 	
       }	
-
-    bed5X = makeCoverageMask_singularity(bedGr)
-    fastaN = maskWithNs_singularity(bed5X, fasta)
-    SNPs = queryVCF_singularity(myVCFz)
 
     filtered = callPerl(SNPs)
 

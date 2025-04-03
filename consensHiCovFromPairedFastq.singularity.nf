@@ -410,6 +410,62 @@ process indexBam_local {
 }
 
 
+process makeVCF_local {
+
+    publishDir "${baseDir}/output/", mode: 'copy'
+
+    input:
+    tuple val(sample_name), path("${sample_name}.sorted.bam")
+    path reference
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.vcf")
+    
+    script:
+    """
+    bcftools mpileup -d 35000 -Ob -f "${reference}"/"${reference_name}".fasta -Q 20 -q 20 --annotate FORMAT/AD,FORMAT/DP "${sample_name}".sorted.bam | bcftools call -mv --ploidy 1 -Ov --output "${sample_name}".vcf
+    """
+    
+}
+
+process zipVCF_local {
+    
+    publishDir "${baseDir}/output/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path("${sample_name}.vcf")
+    
+    output:
+    tuple val(sample_name), path("${sample_name}.vcf.gz")
+    
+    script:
+    """
+      bgzip -c "${sample_name}".vcf > "${sample_name}".vcf.gz  
+
+    """
+}
+
+process csiVCF_local {
+
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/bcftools:1.9--ha228f0b_4' :
+    'quay.io/biocontainers/bcftools:1.9--ha228f0b_4' }"
+    
+    publishDir "${baseDir}/output/", mode: 'copy'
+
+    input:
+    tuple val(sample_name), path("${sample_name}.vcf.gz")
+
+    output:
+    tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
+
+    script:
+    """
+      bcftools index "${sample_name}".vcf.gz -o "${sample_name}".vcf.gz.csi    
+    """
+ }
+
+
 
 workflow {
     
@@ -426,7 +482,11 @@ workflow {
          bamResults = sam2bam_local(mapResults)
 	 sortedBam = sortBam_local(bamResults)
 	 indexedBam = indexBam_local(sortedBam)
-       }
+         myVCF = makeVCF_local(sortedBam, reference_path)   
+         myVCF.view { "SNP calls: ${it}" }
+         myVCFz = zipVCF_local(myVCF)
+         myVCFcsi = csiVCF_local(myVCFz)
+      }
       else
       {
         mapResults = bowtie2map_singularity(read_pairs_ch, reference_path)
@@ -434,19 +494,13 @@ workflow {
 	bamResults = sam2bam_singularity(mapResults)
         sortedBam = sortBam_singularity(bamResults)
 	indexedBam = indexBam_singularity(sortedBam)
+        myVCF = makeVCF_singularity(sortedBam, reference_path)   
+        myVCF.view { "SNP calls: ${it}" }
+        myVCFz = zipVCF_singularity(myVCF)
+        myVCFcsi = csiVCF_singularity(myVCFz)
       }
     
-
-    myVCF = makeVCF_singularity(sortedBam, reference_path)   
-    
-    myVCF.view { "SNP calls: ${it}" }
-    
-    myVCFz = zipVCF_singularity(myVCF)
-
-    myVCFcsi = csiVCF_singularity(myVCFz)
-
     fasta = makeBcfConsensus_singularity(myVCFz, myVCFcsi, reference_path)
-
     fasta.view { "Consensus FASTA: ${it}" }
 
     bedGr = makeGenomeCov_singularity(sortedBam, reference_path)

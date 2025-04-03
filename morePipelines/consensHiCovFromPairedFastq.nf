@@ -3,16 +3,28 @@
 nextflow.enable.dsl=2
 
 /* Usage
-     nextflow run word_count.nf --reference <fasta file> --inputPair <paired fastq files>
+     nextflow run consensHiCovFromPairedFastq.nf  --reference "$PWD/../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1" --inputPair "$PWD/../suppl_poliovirus/polio-sample-*_R{1,2}_001.fastq.gz" --intermediate "$PWD/../intermediate/" --output "$PWD/../outdir/" 
  */
 
-params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+// -- This version of consensHiCovFromPairedFastq.nf runs strictly on locally-driven processes --
+// -- No Singularity nor Docker --
+// WARNING: Must validate local installation of the following prerequisites/dependencies:
+// nextflow v24.04.2 or higher
+// bowtie2/2.3.5.1 or higher
+// samtools/1.9
+// bcftools/1.9
+// htslib/1.19.1 or higher
+// bedtools/2.27.1
+// seqtk/1.3
+// plus, your favorite version of perl
+
+params.reference = "${baseDir}/../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name
 reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
-params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
-params.output = "${baseDir}/output/"
+params.inputPair = "${baseDir}/../bowtieConsensTestFiles/eng_live_atten_poliovirus/polio_sample_3_screened_trim_R?_001.fastq.gz"
+params.output = "${baseDir}/../output/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -47,7 +59,7 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map {
 
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path(reads)
@@ -65,7 +77,7 @@ process bowtie2map {
 
 process bowtie2map_singularity {
 
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path(reads)
@@ -83,7 +95,7 @@ process bowtie2map_singularity {
 
 process sam2bam {
 
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
@@ -100,7 +112,7 @@ process sam2bam {
 
 process sortBam {
 
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../intermediate/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.bam")
@@ -116,7 +128,7 @@ process sortBam {
 
 process indexBam {
     
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -133,7 +145,7 @@ process indexBam {
 
 process makeVCF {
 
-    publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/../output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -151,7 +163,7 @@ process makeVCF {
 
 process zipVCF {
     
-    publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/../output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf")
@@ -169,7 +181,7 @@ process zipVCF {
 
 process csiVCF {
 
-    publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/../output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -185,7 +197,7 @@ process csiVCF {
 
 process makeBcfConsensus {
     
-    publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/../output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -204,7 +216,7 @@ process makeBcfConsensus {
 
 process makeGenomeCov {
 
-   publishDir "${baseDir}/output/", mode: 'copy'
+   publishDir "${baseDir}/../output/", mode: 'copy'
    
    input:
    tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -222,7 +234,7 @@ process makeGenomeCov {
 
 process makeCoverageMask {
 
-   publishDir "${baseDir}/output/", mode: 'copy'
+   publishDir "${baseDir}/../output/", mode: 'copy'
    
    input:
    tuple val(sample_name), path("${sample_name}.bedGraph")
@@ -240,7 +252,7 @@ process makeCoverageMask {
 
 process maskWithNs {
    
-   publishDir "${baseDir}/output/", mode: 'copy'
+   publishDir "${baseDir}/../output/", mode: 'copy'
    
    input:
    tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
@@ -257,7 +269,7 @@ process maskWithNs {
 
 process queryVCF {
    
-   publishDir "${baseDir}/output/", mode: 'copy'
+   publishDir "${baseDir}/../output/", mode: 'copy'
    
    input:
    tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -267,7 +279,7 @@ process queryVCF {
    
    script:
    """
-   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
+   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz | perl $PWD/../Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
    """
 }
 
@@ -279,10 +291,6 @@ workflow {
         .set { read_pairs_ch }
    
    
-   // LOOKSY(read_pairs_ch, params.reference) | view
-    
-   //  mapResults = bowtie2map(read_pairs_ch, reference_path)
-    
     mapResults = bowtie2map(read_pairs_ch, reference_path) 
     
     mapResults.view { "Bowtie2 Results: ${it}" }

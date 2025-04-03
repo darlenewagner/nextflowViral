@@ -4,6 +4,7 @@ bowtieConsensTestFiles/
 output/
 intermediate/
 prevOutput/
+suppl*/
 .nextflow*
 
 #Ignore these files:

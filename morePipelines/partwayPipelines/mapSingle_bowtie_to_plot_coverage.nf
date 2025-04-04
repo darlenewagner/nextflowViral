@@ -4,17 +4,28 @@ nextflow.enable.dsl=2
 
 /* Usage for test data
 nextflow run mapSingle_bowtie_to_plot_coverage.nf --reference "$PWD/../bowtieConsensTestFiles/adenovirus_B3/OR777202.1" --inputSingle "$PWD/../bowtieConsensTestFiles/adenovirus_B3/Pool-1_S1_adenovirus_B3_001.fastq.gz" --intermediate "$PWD/intermediate/"
- */
+*/
 
-params.reference = "${baseDir}/../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+// -- Locally-Driven Processes --
+// WARNING: Must validate local installation of the following prerequisites/dependencies:
+// nextflow v24.04.2 or higher
+// bowtie2/2.3.5.1 or higher
+// samtools/1.9
+// bcftools/1.9
+// htslib/1.19.1 or higher
+// bedtools/2.27.1
+// plus, your favorite version of perl
+
+
+params.reference = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name
 reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
-params.inputSingle = "${baseDir}/../expBowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq"
+params.inputSingle = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/Pool-1_S1_final_pseudoPairs.fastq"
 inputSingle_path = file(params.inputSingle).parent
-params.output = "${baseDir}/output/"
-params.intermediate = "${baseDir}/intermediate/"
+params.output = "${baseDir}/../../output/"
+params.intermediate = "${baseDir}/../../intermediate/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -44,7 +55,7 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map {
 
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     path(sample_name)
@@ -62,9 +73,11 @@ process bowtie2map {
 
 process bowtie2map_singularity {
 
-    tag { sample }
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/bowtie2:2.5.4--he96a11b_5' :
+    'quay.io/biocontainers/bowtie2:2.5.4--he96a11b_5' }"
     
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     path(sample_name)
@@ -75,14 +88,14 @@ process bowtie2map_singularity {
        
     script:
     """
-    singularity exec "${baseDir}/../"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name.baseName}.single.sam"
+     bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -U "${sample_name}" > "${sample_name.baseName}.single.sam"
     """
 }
 
 
 process sam2bam {
 
-    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
@@ -99,7 +112,7 @@ process sam2bam {
 
 process sortBam {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.bam")
@@ -115,7 +128,7 @@ process sortBam {
 
 process indexBam {
     
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -133,7 +146,7 @@ process indexBam {
 
 process makeGenomeCov {
 
-   publishDir "${baseDir}/../output/", mode: 'copy'
+   publishDir "${baseDir}/../../output/", mode: 'copy'
    
    input:
    tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -152,7 +165,7 @@ process makeGenomeCov {
 
 process callPerl {
   
-  publishDir "${baseDir}/../output/", mode: 'copy'
+  publishDir "${baseDir}/../../output/", mode: 'copy'
 
   input:
   tuple val(sample_name), path("${sample_name}.bedGraph")
@@ -162,7 +175,7 @@ process callPerl {
 
   script:
   """
-  perl ${baseDir}/../Perl_scripts/coverageStatsFromBedGraph.pl "${sample_name}".bedGraph
+  perl ${baseDir}/../../Perl_scripts/coverageStatsFromBedGraph.pl "${sample_name}".bedGraph
   """
   
 }

@@ -2,18 +2,24 @@
 
 nextflow.enable.dsl=2
 
-/* Usage
+// -- Locally-Driven Processes --
+// WARNING: Must validate local installation of the following prerequisites/dependencies:
+// nextflow v24.04.2 or higher
+// bowtie2/2.3.5.1 or higher
+// samtools/1.9
+// bcftools/1.9
+// htslib/1.19.1 or higher
+// bedtools/2.27.1
 
- */
 
-params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+params.reference = "${baseDir}/../../bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
 reference_name = file(params.reference).name
 reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
 
-params.inputSingle = "${baseDir}/../bowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq"
+params.inputSingle = "${baseDir}/../../bowtieConsensTestFiles/pseudoPairs/Pool-1_S1_final_pseudoPairs.fastq"
 inputSingle_path = file(params.inputSingle).parent
-params.output = "${baseDir}/../output/"
+params.output = "${baseDir}/../../output/"
 
 process LOOKSY  // for debugging and sanity checking
   {
@@ -43,7 +49,7 @@ process LOOKSY  // for debugging and sanity checking
 
 process bowtie2map {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     path(sample_name)
@@ -63,7 +69,7 @@ process bowtie2map_singularity {
 
     tag { sample }
     
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     path(sample_name)
@@ -81,7 +87,7 @@ process bowtie2map_singularity {
 
 process sam2bam {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
@@ -98,7 +104,7 @@ process sam2bam {
 
 process sortBam {
 
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.bam")
@@ -114,7 +120,7 @@ process sortBam {
 
 process indexBam {
     
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
+    publishDir "${baseDir}/../../intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -131,7 +137,7 @@ process indexBam {
 
 process makeVCF {
 
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/../../output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -149,7 +155,7 @@ process makeVCF {
 
 process zipVCF {
     
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/../../output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf")
@@ -167,7 +173,7 @@ process zipVCF {
 
 process csiVCF {
 
-   publishDir "${baseDir}/../output/", mode: 'copy'
+   publishDir "${baseDir}/../../output/", mode: 'copy'
 
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -183,7 +189,7 @@ process csiVCF {
 
 process makeBcfConsensus {
     
-    publishDir "${baseDir}/../output/", mode: 'copy'
+    publishDir "${baseDir}/../../output/", mode: 'copy'
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
@@ -202,7 +208,7 @@ process makeBcfConsensus {
 
 process makeGenomeCov {
 
-   publishDir "${baseDir}/../output/", mode: 'copy'
+   publishDir "${baseDir}/../../output/", mode: 'copy'
    
    input:
    tuple val(sample_name), path("${sample_name}.sorted.bam")
@@ -225,11 +231,6 @@ workflow {
         .fromPath(params.inputSingle, checkIfExists: true)
         .set { fastq_ch }
    
-   
-   // LOOKSY(fastq_ch, params.reference) | view
-    
-   //  mapResults = bowtie2map(fastq_ch, reference_path)
-    
     mapResults = bowtie2map_singularity(params.inputSingle, reference_path) 
     
     mapResults.view { "Bowtie2 Results: ${it}" }

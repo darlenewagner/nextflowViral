@@ -302,42 +302,64 @@ process queryVCF {
 }
 
 
+include { checkExecutables as checkExecutables0 }
+include { checkExecutables as checkExecutables1 }
+include { checkExecutables as checkExecutables2 }
+
 workflow {
     
     Channel
         .fromFilePairs(params.inputPair, checkIfExists: true)
         .set { read_pairs_ch }
    
-
-    checkExecutables( 'bowtie2' ).view()
+    // validate bowtie2 installation
+    checkExecutables0( 'bowtie2' ).view()
    
     mapResults = bowtie2map(read_pairs_ch, reference_path) 
     
     mapResults.view { "Bowtie2 Results: ${it}" }
     
     bamResults = sam2bam(mapResults)
-    
+
+    // validate samtools installation
+    checkExecutables1( 'samtools' ).view()
+
     sortedBam = sortBam(bamResults)
     
     indexedBam = indexBam(sortedBam)
+
+    // validate bcftools installation
+    checkExecutables2( 'bcftools' ).view()
     
     myVCF = makeVCF(sortedBam, reference_path)   
     
     myVCF.view { "SNP calls: ${it}" }
+
+    // validate htslib installation
+    checkExecutables( 'bgzip' ).view()
     
     myVCFz = zipVCF(myVCF)
 
     myVCFcsi = csiVCF(myVCFz)
 
+    // validate bedtools installation
+    checkExecutables( 'genomeCoverageBed' ).view()
+    
     fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
 
     fasta.view { "Consensus FASTA: ${it}" }
 
     bedGr = makeGenomeCov(sortedBam, reference_path)
 
+    // validate seqtk installation
+    checkExecutables( 'seqtk' ).view()
+
     bed5X = makeCoverageMask(bedGr)
 
     fastaN = maskWithNs(bed5X, fasta)
+    
+    // validate perl installation
+    checkExecutables( 'perl' ).view()
 
     SNPs = queryVCF(myVCFz)
     

@@ -8,7 +8,7 @@ nextflow.enable.dsl=2
 
 // -- This version of consensHiCovFromPairedFastq.nf runs strictly on locally-driven processes --
 // -- No Singularity nor Docker --
-// WARNING: Must validate local installation of the following prerequisites/dependencies:
+// WARNING: Local installation must be performed for the following prerequisites/dependencies:
 // nextflow v24.04.2 or higher
 // bowtie2/2.3.5.1 or higher
 // samtools/1.9
@@ -55,6 +55,24 @@ process LOOKSY  // for debugging and sanity checking
     """
   
   }
+
+process checkExecutables {
+  
+  input:
+  val executableName
+  
+  output:
+  stdout
+  
+  script:
+  """
+   if which ${executableName} > /dev/null 2>&1; then
+       echo "${executableName} found."
+   else
+       echo "${executableName} not found."
+   fi
+  """
+}
 
 
 process bowtie2map {
@@ -290,6 +308,8 @@ workflow {
         .fromFilePairs(params.inputPair, checkIfExists: true)
         .set { read_pairs_ch }
    
+
+    checkExecutables( 'bowtie2' ).view()
    
     mapResults = bowtie2map(read_pairs_ch, reference_path) 
     

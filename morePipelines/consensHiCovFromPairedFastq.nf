@@ -56,24 +56,6 @@ process LOOKSY  // for debugging and sanity checking
   
   }
 
-process checkExecutables {
-  
-  input:
-  val executableName
-  
-  output:
-  stdout
-  
-  script:
-  """
-   if which ${executableName} > /dev/null 2>&1; then
-       echo "${executableName} found."
-   else
-       echo "${executableName} not found."
-   fi
-  """
-}
-
 
 process bowtie2map {
 
@@ -81,32 +63,14 @@ process bowtie2map {
     
     input:
     tuple val(sample_name), path(reads)
-    path reference 
-
+    path reference
+   
     output:
     tuple val(sample_name), path("${sample_name}.sam")    
 
     script:
     """
-    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
-    """
-}
-
-
-process bowtie2map_singularity {
-
-    publishDir "${baseDir}/../intermediate/", mode: 'copy'
-    
-    input:
-    tuple val(sample_name), path(reads)
-    path reference 
-
-    output:
-    tuple val(sample_name), path("${sample_name}.sam")    
-
-    script:
-    """
-    singularity exec "${baseDir}/"my_bowtie2.sif bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
+       bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${reads[0]}" -2 "${reads[1]}" > "${sample_name}.sam"
     """
 }
 
@@ -302,9 +266,13 @@ process queryVCF {
 }
 
 
-include { checkExecutables as checkExecutables0 }
-include { checkExecutables as checkExecutables1 }
-include { checkExecutables as checkExecutables2 }
+include { checkExecutables as checkExecutables0 } from '../modules/reusable'
+include { checkExecutables as checkExecutables1 } from '../modules/reusable'
+include { checkExecutables as checkExecutables2 } from '../modules/reusable'
+include { checkExecutables as checkExecutables3 } from '../modules/reusable'
+include { checkExecutables as checkExecutables4 } from '../modules/reusable'
+include { checkExecutables as checkExecutables5 } from '../modules/reusable'
+include { checkExecutables as checkExecutables6 } from '../modules/reusable'
 
 workflow {
     
@@ -313,54 +281,68 @@ workflow {
         .set { read_pairs_ch }
    
     // validate bowtie2 installation
-    checkExecutables0( 'bowtie2' ).view()
+    foundIt0 = checkExecutables0( 'bowtie2' )
+    // def found = foundIt0.view()
+     foundIt0.view { "bowtie2 executable found: ${it}" }
+ 
+    if(foundIt0.view() == true) {
+      mapResults = bowtie2map(read_pairs_ch, reference_path ) 
+      mapResults.view { "Bowtie2 Results: ${it}" }
+      }
    
-    mapResults = bowtie2map(read_pairs_ch, reference_path) 
-    
-    mapResults.view { "Bowtie2 Results: ${it}" }
-    
-    bamResults = sam2bam(mapResults)
-
     // validate samtools installation
-    checkExecutables1( 'samtools' ).view()
+    foundIt1 = checkExecutables1( 'samtools' )
+    foundIt1.view { "samtools executable found: ${it}" }
 
-    sortedBam = sortBam(bamResults)
-    
-    indexedBam = indexBam(sortedBam)
+    if(foundIt1 == "true"){
+      bamResults = sam2bam(mapResults)
+      sortedBam = sortBam(bamResults)
+      indexedBam = indexBam(sortedBam)
+      }
 
     // validate bcftools installation
-    checkExecutables2( 'bcftools' ).view()
+    foundIt2 = checkExecutables2( 'bcftools' )
+    foundIt2.view { "bcftools executable found: ${it}" }
     
-    myVCF = makeVCF(sortedBam, reference_path)   
+    if(foundIt2 == "true") {
     
-    myVCF.view { "SNP calls: ${it}" }
+        myVCF = makeVCF(sortedBam, reference_path)   
+        myVCF.view { "SNP calls: ${it}" }
+      }
 
     // validate htslib installation
-    checkExecutables( 'bgzip' ).view()
+    foundIt3 = checkExecutables3( 'bgzip' )
+    foundIt3.view { "bgzip executable found: ${it}" }
+
+    if(foundIt3 == "true") {
+      myVCFz = zipVCF(myVCF)
+      myVCFcsi = csiVCF(myVCFz)
+    }
     
-    myVCFz = zipVCF(myVCF)
-
-    myVCFcsi = csiVCF(myVCFz)
-
     // validate bedtools installation
-    checkExecutables( 'genomeCoverageBed' ).view()
-    
-    fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
+    foundIt4 = checkExecutables4( 'genomeCoverageBed' )
+    foundIt4.view { "genomeCoverageBed executable found: ${it}" }
 
-    fasta.view { "Consensus FASTA: ${it}" }
-
-    bedGr = makeGenomeCov(sortedBam, reference_path)
-
+   if(foundIt4 == "true") {
+      fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
+      fasta.view { "Consensus FASTA: ${it}" }
+      bedGr = makeGenomeCov(sortedBam, reference_path)
+    }
+  
     // validate seqtk installation
-    checkExecutables( 'seqtk' ).view()
+    foundIt5 = checkExecutables5( 'seqtk' )
+    foundIt5.view { "seqtk executable found: ${it}" }
 
-    bed5X = makeCoverageMask(bedGr)
-
-    fastaN = maskWithNs(bed5X, fasta)
+    if(foundIt5 == "true") {
+      bed5X = makeCoverageMask(bedGr)
+      fastaN = maskWithNs(bed5X, fasta)
+    }
     
     // validate perl installation
-    checkExecutables( 'perl' ).view()
+    foundIt6 = checkExecutables6( 'perl' )
+    foundIt6.view { "perl executable found: ${it}" }
 
-    SNPs = queryVCF(myVCFz)
-    
+    if(foundIt6 == "true") {
+      SNPs = queryVCF(myVCFz)
+    }
 }

@@ -85,9 +85,13 @@ process sam2bam {
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
-    
+    val foundIt
+
     output:
     tuple val(sample_name), path("${sample_name}.bam")
+
+    when:
+    foundIt.contains("true")
 
     script:
     """
@@ -102,10 +106,14 @@ process sortBam {
 
     input:
     tuple val(sample_name), path("${sample_name}.bam")
-    
+    val foundIt
+
     output:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
-    
+
+    when:
+    foundIt.contains("true")
+
     script:
     """
     samtools sort "${sample_name}".bam -o "${sample_name}".sorted.bam
@@ -118,10 +126,14 @@ process indexBam {
     
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
-    
+    val foundIt
+
     output:
     tuple val(sample_name), path("${sample_name}.sorted.bam.bai")
-    
+
+    when:
+    foundIt.contains("true")
+
     script:
     """
     samtools index -b "${sample_name}".sorted.bam "${sample_name}".sorted.bam.bai
@@ -286,25 +298,22 @@ workflow {
    
     // validate bowtie2 installation
     foundIt0 = checkExecutables0( 'bowtie2' )
-    //foundIt0.subscribe { str -> println "Got: ${str}"}
-    // def found = foundIt0.view()
-     foundIt0.view { "bowtie2 executable found: ${it}" }
- 
-    //if(foundIt0.view() == 'true') {
-      mapResults = bowtie2map(read_pairs_ch, reference_path, foundIt0 ) 
-      mapResults.view { "Bowtie2 Results: ${it}" }
-     // }
-   
+    foundIt0.view { "bowtie2 executable found: ${it}" }
+    
+    mapResults = bowtie2map(read_pairs_ch, reference_path, foundIt0 ) 
+    mapResults.view { "Bowtie2 Results: ${it}" }
+     
+     
     // validate samtools installation
     foundIt1 = checkExecutables1( 'samtools' )
     foundIt1.view { "samtools executable found: ${it}" }
 
-    if(foundIt1 == "true"){
-      bamResults = sam2bam(mapResults)
-      sortedBam = sortBam(bamResults)
-      indexedBam = indexBam(sortedBam)
-      }
-
+    
+    bamResults = sam2bam(mapResults, foundIt1)
+    sortedBam = sortBam(bamResults, foundIt1)
+    indexedBam = indexBam(sortedBam, foundIt1)
+    
+    
     // validate bcftools installation
     foundIt2 = checkExecutables2( 'bcftools' )
     foundIt2.view { "bcftools executable found: ${it}" }

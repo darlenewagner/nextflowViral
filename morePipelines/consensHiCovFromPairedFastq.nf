@@ -180,7 +180,6 @@ process zipVCF {
     script:
     """
       bgzip -c "${sample_name}".vcf > "${sample_name}".vcf.gz  
-
     """
 }
 
@@ -333,7 +332,7 @@ workflow {
     
     mapResults = bowtie2map(read_pairs_ch, reference_path, foundIt0 ) 
     mapResults.view { "Bowtie2 Results: ${it}" }
-     
+    
      
     // validate samtools installation
     foundIt1 = checkExecutables1( 'samtools' )
@@ -379,5 +378,6 @@ workflow {
     foundIt6.view { "perl executable found: ${it}" }
     
     SNPs = queryVCF(myVCFz, foundIt6)
-    
+
 }
+

@@ -148,10 +148,14 @@ process makeVCF {
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
     path reference
+    val foundIt    
     
     output:
     tuple val(sample_name), path("${sample_name}.vcf")
-    
+
+    when:
+    foundIt.contains("true")
+
     script:
     """
     bcftools mpileup -d 35000 -Ob -f "${reference}"/"${reference_name}".fasta -Q 20 -q 20 --annotate FORMAT/AD,FORMAT/DP "${sample_name}".sorted.bam | bcftools call -mv --ploidy 1 -Ov --output "${sample_name}".vcf
@@ -165,11 +169,14 @@ process zipVCF {
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf")
-    
+    val foundIt
+
     output:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
 
-    
+    when:
+    foundIt.contains("true")
+
     script:
     """
       bgzip -c "${sample_name}".vcf > "${sample_name}".vcf.gz  
@@ -183,9 +190,13 @@ process csiVCF {
 
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
+    val foundIt
 
     output:
     tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
+
+    when:
+    foundIt.contains("true")
 
     script:
     """
@@ -201,10 +212,14 @@ process makeBcfConsensus {
     tuple val(sample_name), path("${sample_name}.vcf.gz")
     tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
     path reference
-    
+    val foundIt
+
     output:
     tuple val(sample_name), path("${sample_name}.fasta")
-    
+
+    when:
+    foundIt.contains("true")
+
     script:
     """
     cat "${reference}"/"${reference_name}".fasta | bcftools consensus "${sample_name}".vcf.gz --sample "${sample_name}".sorted.bam -o "${sample_name}".fasta
@@ -219,10 +234,14 @@ process makeGenomeCov {
    input:
    tuple val(sample_name), path("${sample_name}.sorted.bam")
    path reference
+   val foundIt
    
    output:
    tuple val(sample_name), path("${sample_name}.bedGraph")
-   
+
+   when:
+   foundIt.contains("true")
+
    script:
    """
    genomeCoverageBed -ibam "${sample_name}".sorted.bam -d -g "${reference}"/"${reference_name}".sizes > "${sample_name}".bedGraph
@@ -236,10 +255,14 @@ process makeCoverageMask {
    
    input:
    tuple val(sample_name), path("${sample_name}.bedGraph")
+   val foundIt
    //path reference
    
    output:
    tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
+
+   when:
+   foundIt.contains("true")
 
    script:
    """
@@ -255,10 +278,14 @@ process maskWithNs {
    input:
    tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
    tuple val(sample_name), path("${sample_name}.fasta")
+   val foundIt
    
    output:
    tuple val(sample_name), path("${sample_name}.fiveX.fasta")
-      
+
+   when:
+   foundIt.contains("true")
+
    script:
    """
    seqtk mutfa "${sample_name}".fasta "${sample_name}".bedGraph.FiveX > "${sample_name}".fiveX.fasta 
@@ -271,10 +298,14 @@ process queryVCF {
    
    input:
    tuple val(sample_name), path("${sample_name}.vcf.gz")
-   
+   val foundIt
+
    output:
    tuple val(sample_name), path("${sample_name}.snp.tsv")
-   
+
+   when:
+   foundIt.contains("true")
+
    script:
    """
    bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz | perl $PWD/../Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
@@ -318,45 +349,35 @@ workflow {
     foundIt2 = checkExecutables2( 'bcftools' )
     foundIt2.view { "bcftools executable found: ${it}" }
     
-    if(foundIt2 == "true") {
-    
-        myVCF = makeVCF(sortedBam, reference_path)   
-        myVCF.view { "SNP calls: ${it}" }
-      }
+    myVCF = makeVCF(sortedBam, reference_path, foundIt2)   
+    myVCF.view { "SNP calls: ${it}" }
 
     // validate htslib installation
     foundIt3 = checkExecutables3( 'bgzip' )
     foundIt3.view { "bgzip executable found: ${it}" }
 
-    if(foundIt3 == "true") {
-      myVCFz = zipVCF(myVCF)
-      myVCFcsi = csiVCF(myVCFz)
-    }
+    myVCFz = zipVCF(myVCF, foundIt3)
+    myVCFcsi = csiVCF(myVCFz, foundIt3)
     
     // validate bedtools installation
     foundIt4 = checkExecutables4( 'genomeCoverageBed' )
     foundIt4.view { "genomeCoverageBed executable found: ${it}" }
-
-   if(foundIt4 == "true") {
-      fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path)
-      fasta.view { "Consensus FASTA: ${it}" }
-      bedGr = makeGenomeCov(sortedBam, reference_path)
-    }
-  
+    
+    fasta = makeBcfConsensus(myVCFz, myVCFcsi, reference_path, foundIt4)
+    fasta.view { "Consensus FASTA: ${it}" }
+    bedGr = makeGenomeCov(sortedBam, reference_path, foundIt4)
+    
     // validate seqtk installation
     foundIt5 = checkExecutables5( 'seqtk' )
     foundIt5.view { "seqtk executable found: ${it}" }
-
-    if(foundIt5 == "true") {
-      bed5X = makeCoverageMask(bedGr)
-      fastaN = maskWithNs(bed5X, fasta)
-    }
+    
+    bed5X = makeCoverageMask(bedGr, foundIt5)
+    fastaN = maskWithNs(bed5X, fasta, foundIt5)
     
     // validate perl installation
     foundIt6 = checkExecutables6( 'perl' )
     foundIt6.view { "perl executable found: ${it}" }
-
-    if(foundIt6 == "true") {
-      SNPs = queryVCF(myVCFz)
-    }
+    
+    SNPs = queryVCF(myVCFz, foundIt6)
+    
 }

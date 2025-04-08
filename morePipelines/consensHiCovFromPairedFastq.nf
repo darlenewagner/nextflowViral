@@ -64,9 +64,13 @@ process bowtie2map {
     input:
     tuple val(sample_name), path(reads)
     path reference
+    val foundIt
    
     output:
     tuple val(sample_name), path("${sample_name}.sam")    
+
+    when:
+    foundIt.contains("true")
 
     script:
     """
@@ -282,13 +286,14 @@ workflow {
    
     // validate bowtie2 installation
     foundIt0 = checkExecutables0( 'bowtie2' )
+    //foundIt0.subscribe { str -> println "Got: ${str}"}
     // def found = foundIt0.view()
      foundIt0.view { "bowtie2 executable found: ${it}" }
  
-    if(foundIt0.view() == true) {
-      mapResults = bowtie2map(read_pairs_ch, reference_path ) 
+    //if(foundIt0.view() == 'true') {
+      mapResults = bowtie2map(read_pairs_ch, reference_path, foundIt0 ) 
       mapResults.view { "Bowtie2 Results: ${it}" }
-      }
+     // }
    
     // validate samtools installation
     foundIt1 = checkExecutables1( 'samtools' )

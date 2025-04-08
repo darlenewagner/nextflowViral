@@ -9,9 +9,9 @@ process checkExecutables {
   script:
 """
    if type "${executable}" &> /dev/null; then
-      echo "true"
+      echo 'true'
   else
-      echo "false"
+      echo 'false'
   fi  
 """    
 }

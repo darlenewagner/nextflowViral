@@ -342,16 +342,22 @@ process callPerl {
 // plus, your favorite version of perl
 
 
+
+
 process bowtie2map_local {
 
     publishDir "${baseDir}/intermediate/", mode: 'copy'
     
     input:
     tuple val(sample_name), path(reads)
-    path reference 
+    path reference
+    val foundIt
 
     output:
     tuple val(sample_name), path("${sample_name}.sam")    
+
+    when:
+    foundIt.contains("true")
 
     script:
     """
@@ -365,10 +371,14 @@ process sam2bam_local {
     
     input:
     tuple val(sample_name), path("${sample_name}.sam")
-    
+    val foundIt
+
     output:
     tuple val(sample_name), path("${sample_name}.bam")
 
+    when:
+    foundIt.contains("true")
+    
     script:
     """
     samtools view "${sample_name}".sam -o "${sample_name}".bam
@@ -382,10 +392,14 @@ process sortBam_local {
 
     input:
     tuple val(sample_name), path("${sample_name}.bam")
+    val foundIt
     
     output:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
     
+    when:
+    foundIt.contains("true")
+
     script:
     """
     samtools sort "${sample_name}".bam -o "${sample_name}".sorted.bam
@@ -398,9 +412,13 @@ process indexBam_local {
     
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
+    val foundIt
     
     output:
     tuple val(sample_name), path("${sample_name}.sorted.bam.bai")
+
+    when:
+    foundIt.contains("true")
     
     script:
     """
@@ -417,10 +435,14 @@ process makeVCF_local {
     input:
     tuple val(sample_name), path("${sample_name}.sorted.bam")
     path reference
+    val foundIt
     
     output:
     tuple val(sample_name), path("${sample_name}.vcf")
-    
+
+    when:
+    foundIt.contains("true")
+
     script:
     """
     bcftools mpileup -d 35000 -Ob -f "${reference}"/"${reference_name}".fasta -Q 20 -q 20 --annotate FORMAT/AD,FORMAT/DP "${sample_name}".sorted.bam | bcftools call -mv --ploidy 1 -Ov --output "${sample_name}".vcf
@@ -434,10 +456,14 @@ process zipVCF_local {
     
     input:
     tuple val(sample_name), path("${sample_name}.vcf")
+    val foundIt
     
     output:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
-    
+
+    when:
+    foundIt.contains("true")
+
     script:
     """
       bgzip -c "${sample_name}".vcf > "${sample_name}".vcf.gz  
@@ -451,9 +477,13 @@ process csiVCF_local {
 
     input:
     tuple val(sample_name), path("${sample_name}.vcf.gz")
+    val foundIt
 
     output:
     tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
+
+    when:
+    foundIt.contains("true")
 
     script:
     """
@@ -470,10 +500,14 @@ process makeBcfConsensus_local {
     tuple val(sample_name), path("${sample_name}.vcf.gz")
     tuple val(sample_name), path("${sample_name}.vcf.gz.csi")
     path reference
+    val foundIt
     
     output:
     tuple val(sample_name), path("${sample_name}.fasta")
-    
+
+    when:
+    foundIt.contains("true")
+
     script:
     """
     cat "${reference}"/"${reference_name}".fasta | bcftools consensus "${sample_name}".vcf.gz --sample "${sample_name}".sorted.bam -o "${sample_name}".fasta
@@ -483,74 +517,89 @@ process makeBcfConsensus_local {
 
 process makeGenomeCov_local {
 
-   publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
    
-   input:
-   tuple val(sample_name), path("${sample_name}.sorted.bam")
-   path reference
+    input:
+    tuple val(sample_name), path("${sample_name}.sorted.bam")
+    path reference
+    val foundIt
    
-   output:
-   tuple val(sample_name), path("${sample_name}.bedGraph")
-   
-   script:
-   """
-   genomeCoverageBed -ibam "${sample_name}".sorted.bam -d -g "${reference}"/"${reference_name}".sizes > "${sample_name}".bedGraph
-   """
+    output:
+    tuple val(sample_name), path("${sample_name}.bedGraph")
+
+    when:
+    foundIt.contains("true")
+
+    script:
+    """
+    genomeCoverageBed -ibam "${sample_name}".sorted.bam -d -g "${reference}"/"${reference_name}".sizes > "${sample_name}".bedGraph
+    """
    
  }
 
 process makeCoverageMask_local {
    
-   publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path("${sample_name}.bedGraph")
+    val foundIt
+    //path reference
    
-   input:
-   tuple val(sample_name), path("${sample_name}.bedGraph")
-   //path reference
-   
-   output:
-   tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
+    output:
+    tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
 
-   script:
-   """
-   awk '{ if (\$3 < 5) {print \$1"\t" \$2"\t" \$3"\t" "N" } else {print \$1"\t" \$2"\t" \$3"\t"}}' "${sample_name}".bedGraph > "${sample_name}".bedGraph.FiveX
-   """
+    when:
+    foundIt.contains("true")
+
+    script:
+    """
+    awk '{ if (\$3 < 5) {print \$1"\t" \$2"\t" \$3"\t" "N" } else {print \$1"\t" \$2"\t" \$3"\t"}}' "${sample_name}".bedGraph > "${sample_name}".bedGraph.FiveX
+    """
   
 }
 
 process maskWithNs_local {
    
-   publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
    
-   input:
-   tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
-   tuple val(sample_name), path("${sample_name}.fasta")
+    input:
+    tuple val(sample_name), path("${sample_name}.bedGraph.FiveX")
+    tuple val(sample_name), path("${sample_name}.fasta")
+    val foundIt
    
-   output:
-   tuple val(sample_name), path("${sample_name}.fiveX.fasta")
-      
-   script:
-   """
-   seqtk mutfa "${sample_name}".fasta "${sample_name}".bedGraph.FiveX > "${sample_name}".fiveX.fasta 
-   """
+    output:
+    tuple val(sample_name), path("${sample_name}.fiveX.fasta")
+
+    when:
+    foundIt.contains("true")
+
+    script:
+    """
+    seqtk mutfa "${sample_name}".fasta "${sample_name}".bedGraph.FiveX > "${sample_name}".fiveX.fasta 
+    """
 }
 
 process queryVCF_local {
 
-   publishDir "${baseDir}/output/", mode: 'copy'
+    publishDir "${baseDir}/output/", mode: 'copy'
    
-   input:
-   tuple val(sample_name), path("${sample_name}.vcf.gz")
-   
-   output:
- //  stdout
-   tuple val(sample_name), path("${sample_name}.messy.snp.tsv")
+    input:
+    tuple val(sample_name), path("${sample_name}.vcf.gz")
+    val foundIt
+
+    output:
+    //  stdout
+    tuple val(sample_name), path("${sample_name}.messy.snp.tsv")
      
-   
-   script:
-   """
-   bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz -o "${sample_name}".messy.snp.tsv
-   """
- //   | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
+    when:
+    foundIt.contains("true")
+
+    script:
+    """
+    bcftools query -f '''%CHROM\t%POS\t%REF\t%ALT\t%QUAL\t[%AD]\t[%DP]\n''' "${sample_name}".vcf.gz -o "${sample_name}".messy.snp.tsv
+    """
+    //   | perl $PWD/Perl_scripts/bcftoolsQuery.pl > "${sample_name}".snp.tsv
 }
 
 
@@ -573,20 +622,30 @@ workflow {
     
     if(params.local)
        {
-         mapResults = bowtie2map_local(read_pairs_ch, reference_path) 
+         // validate bowtie2 installation
+         foundIt0 = checkExecutables0( 'bowtie2' )
+         foundIt0.view { "bowtie2 executable found: ${it}" }
+    
+         mapResults = bowtie2map_local(read_pairs_ch, reference_path, foundIt0) 
          mapResults.view { "Bowtie2 Results: ${it}" }
+	 
          bamResults = sam2bam_local(mapResults)
 	 sortedBam = sortBam_local(bamResults)
 	 indexedBam = indexBam_local(sortedBam)
+	 
          myVCF = makeVCF_local(sortedBam, reference_path)   
          myVCF.view { "SNP calls: ${it}" }
+	 
          myVCFz = zipVCF_local(myVCF)
          myVCFcsi = csiVCF_local(myVCFz)
+	 
          fasta = makeBcfConsensus_local(myVCFz, myVCFcsi, reference_path)
          fasta.view { "Consensus FASTA: ${it}" }
          bedGr = makeGenomeCov_local(sortedBam, reference_path)
+	 
          bed5X = makeCoverageMask_local(bedGr)
          fastaN = maskWithNs_local(bed5X, fasta)
+	 
          SNPs = queryVCF_local(myVCFz)
 
       }

@@ -10,12 +10,19 @@ nextflow.enable.dsl=2
      - Use flag '--local' to run without pulling and building from Singularity, only recommended when prerequisite programs are available locally
  */
 
-params.local = false 
+params.local = false  // by default, use 'Keep Calm and Pull from Singularity'
+params.longInput = false  // by default, read .fastq.gz filenames from a 'sampleSheet.csv'
+
+params.samplesheet = "${baseDir}/bowtieConsensTestFiles/sampleSheet.csv"
 
 params.reference = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/MZ245455.1"
+
+
 reference_name = file(params.reference).name
 reference_idx = "${reference_name}.fai"
 reference_path = file(params.reference).parent
+
+// for setting --longInput set to true
 
 params.inputPair = "${baseDir}/bowtieConsensTestFiles/eng_live_atten_poliovirus/polio-sample-8_S13_R{1,2}_001.fastq.gz"
 params.output = "${baseDir}/output/"
@@ -58,6 +65,31 @@ process LOOKSY  // for debugging and sanity checking
 // Plus, your favorite version of perl
 
 process bowtie2map_singularity {
+
+    // reads fastq1 and fastq2 columns from 'sampleSheet.csv', default setting
+    
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    'https://depot.galaxyproject.org/singularity/bowtie2:2.5.4--he96a11b_5' :
+    'quay.io/biocontainers/bowtie2:2.5.4--he96a11b_5' }"
+
+
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path(fastq1), path(fastq2)
+    path reference 
+
+    output:
+    tuple val(sample_name), path("${sample_name}.sam")    
+
+    script:
+    """
+    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${fastq1}" -2 "${fastq2}" > "${sample_name}.sam"
+    """
+}
+
+
+process bowtie2map_singularity_long {
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
     'https://depot.galaxyproject.org/singularity/bowtie2:2.5.4--he96a11b_5' :
@@ -342,9 +374,30 @@ process callPerl {
 // plus, your favorite version of perl
 
 
-
-
 process bowtie2map_local {
+
+    publishDir "${baseDir}/intermediate/", mode: 'copy'
+    
+    input:
+    tuple val(sample_name), path(fastq1), path(fastq2)
+    path reference
+    val foundIt
+
+    output:
+    tuple val(sample_name), path("${sample_name}.sam")    
+
+    when:
+    foundIt.contains("true")
+
+    script:
+    """
+    bowtie2 --no-unal --no-mixed -x "${reference}"/"${reference_name}" -1 "${fastq1}" -2 "${fastq2}" > "${sample_name}.sam"
+    """
+}
+
+
+
+process bowtie2map_local_long {
 
     publishDir "${baseDir}/intermediate/", mode: 'copy'
     
@@ -613,11 +666,26 @@ include { checkExecutables as checkExecutables5 } from './modules/reusable'
 include { checkExecutables as checkExecutables6 } from './modules/reusable'
 
 workflow {
-    
-    Channel
-        .fromFilePairs(params.inputPair, checkIfExists: true)
-        .set { read_pairs_ch }
-      
+
+
+// longInput with --inputPair "$PWD/path/to/samples/*_R{1,2}_001.fastq.gz
+// otherwise, use sampleSheet.csv
+
+  if(params.longInput) {
+ 
+      Channel
+         .fromFilePairs(params.inputPair, checkIfExists: true)
+         .set { read_pairs_ch }
+
+      }
+  else {
+
+      Channel.fromPath(params.samplesheet)
+         .splitCsv(header: true)
+         .set { samples }
+     }
+
+
    // LOOKSY(read_pairs_ch, params.reference) | view
     
     if(params.local)
@@ -625,8 +693,13 @@ workflow {
          // validate bowtie2 installation
          foundIt0 = checkExecutables0( 'bowtie2' )
          foundIt0.view { "bowtie2 executable found: ${it}" }
-    
-         mapResults = bowtie2map_local(read_pairs_ch, reference_path, foundIt0) 
+
+       if(params.longInput) {    
+             mapResults = bowtie2map_local_long(read_pairs_ch, reference_path, foundIt0) 
+          }
+       else {
+             mapResults = bowtie2map_local(samples, reference_path, foundIt0) 
+         }
          mapResults.view { "Bowtie2 Results: ${it}" }
 
          // validate samtools installation
@@ -675,7 +748,15 @@ workflow {
       }
       else
       {
-         mapResults = bowtie2map_singularity(read_pairs_ch, reference_path)
+        if(params.longInput) 
+            {
+               mapResults = bowtie2map_singularity_long(read_pairs_ch, reference_path)
+            }
+         else
+            {
+               mapResults = bowtie2map_singularity(samples, reference_path)
+            }
+
          mapResults.view { "Bowtie2 Results: ${it}" }
 	 bamResults = sam2bam_singularity(mapResults)
          sortedBam = sortBam_singularity(bamResults)

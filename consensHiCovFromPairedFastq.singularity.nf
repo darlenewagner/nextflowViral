@@ -331,7 +331,7 @@ process callPerl {
 
 
 // -- Locally-Driven Processes --
-// WARNING: Must validate local installation of the following prerequisites/dependencies:
+// WARNING: Local installation of the following prerequisites/dependencies will be validated during runtime:
 // nextflow v24.04.2 or higher
 // bowtie2/2.3.5.1 or higher
 // samtools/1.9
@@ -554,6 +554,14 @@ process queryVCF_local {
 }
 
 
+
+include { checkExecutables as checkExecutables0 } from 'modules/reusable'
+include { checkExecutables as checkExecutables1 } from 'modules/reusable'
+include { checkExecutables as checkExecutables2 } from 'modules/reusable'
+include { checkExecutables as checkExecutables3 } from 'modules/reusable'
+include { checkExecutables as checkExecutables4 } from 'modules/reusable'
+include { checkExecutables as checkExecutables5 } from 'modules/reusable'
+include { checkExecutables as checkExecutables6 } from 'modules/reusable'
 
 workflow {
     

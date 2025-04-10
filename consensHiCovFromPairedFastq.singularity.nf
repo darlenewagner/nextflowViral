@@ -604,13 +604,13 @@ process queryVCF_local {
 
 
 
-include { checkExecutables as checkExecutables0 } from 'modules/reusable'
-include { checkExecutables as checkExecutables1 } from 'modules/reusable'
-include { checkExecutables as checkExecutables2 } from 'modules/reusable'
-include { checkExecutables as checkExecutables3 } from 'modules/reusable'
-include { checkExecutables as checkExecutables4 } from 'modules/reusable'
-include { checkExecutables as checkExecutables5 } from 'modules/reusable'
-include { checkExecutables as checkExecutables6 } from 'modules/reusable'
+include { checkExecutables as checkExecutables0 } from './modules/reusable'
+include { checkExecutables as checkExecutables1 } from './modules/reusable'
+include { checkExecutables as checkExecutables2 } from './modules/reusable'
+include { checkExecutables as checkExecutables3 } from './modules/reusable'
+include { checkExecutables as checkExecutables4 } from './modules/reusable'
+include { checkExecutables as checkExecutables5 } from './modules/reusable'
+include { checkExecutables as checkExecutables6 } from './modules/reusable'
 
 workflow {
     
@@ -628,25 +628,49 @@ workflow {
     
          mapResults = bowtie2map_local(read_pairs_ch, reference_path, foundIt0) 
          mapResults.view { "Bowtie2 Results: ${it}" }
+
+         // validate samtools installation
+         foundIt1 = checkExecutables1( 'samtools' )
+         foundIt1.view { "samtools executable found: ${it}" }
 	 
-         bamResults = sam2bam_local(mapResults)
-	 sortedBam = sortBam_local(bamResults)
-	 indexedBam = indexBam_local(sortedBam)
+         bamResults = sam2bam_local(mapResults, foundIt1)
+	 sortedBam = sortBam_local(bamResults, foundIt1)
+	 indexedBam = indexBam_local(sortedBam, foundIt1)
+
+         // validate bcftools installation
+         foundIt2 = checkExecutables2( 'bcftools' )
+         foundIt2.view { "bcftools executable found: ${it}" }
 	 
-         myVCF = makeVCF_local(sortedBam, reference_path)   
+         myVCF = makeVCF_local(sortedBam, reference_path, foundIt2)   
          myVCF.view { "SNP calls: ${it}" }
-	 
-         myVCFz = zipVCF_local(myVCF)
-         myVCFcsi = csiVCF_local(myVCFz)
-	 
-         fasta = makeBcfConsensus_local(myVCFz, myVCFcsi, reference_path)
+
+         // validate htslib installation
+         foundIt3 = checkExecutables3( 'bgzip' )
+         foundIt3.view { "bgzip executable found: ${it}" }
+
+         myVCFz = zipVCF_local(myVCF, foundIt3)
+         myVCFcsi = csiVCF_local(myVCFz, foundIt3)
+
+         // validate bedtools installation
+         foundIt4 = checkExecutables4( 'genomeCoverageBed' )
+         foundIt4.view { "genomeCoverageBed executable found: ${it}" }
+
+         fasta = makeBcfConsensus_local(myVCFz, myVCFcsi, reference_path, foundIt4)
          fasta.view { "Consensus FASTA: ${it}" }
-         bedGr = makeGenomeCov_local(sortedBam, reference_path)
-	 
-         bed5X = makeCoverageMask_local(bedGr)
-         fastaN = maskWithNs_local(bed5X, fasta)
-	 
-         SNPs = queryVCF_local(myVCFz)
+         bedGr = makeGenomeCov_local(sortedBam, reference_path, foundIt4)
+
+         // validate seqtk installation
+         foundIt5 = checkExecutables5( 'seqtk' )
+         foundIt5.view { "seqtk executable found: ${it}" }
+
+         bed5X = makeCoverageMask_local(bedGr, foundIt5)
+         fastaN = maskWithNs_local(bed5X, fasta, foundIt5)
+
+         // validate perl installation
+         foundIt6 = checkExecutables6( 'perl' )
+         foundIt6.view { "perl executable found: ${it}" }
+         
+         SNPs = queryVCF_local(myVCFz, foundIt6)
 
       }
       else
